@@ -19,7 +19,7 @@
     "raspberrypi5-64": "2025.11.3",
     "yellow": "2025.11.3",
     "green": "2025.11.3",
-    "tinker": "2025.11.3-ga.1",
+    "tinker": "2025.11.3-ga.2",
     "odroid-c2": "2025.11.3",
     "odroid-c4": "2025.11.3",
     "odroid-m1": "2025.11.3",
@@ -83,5 +83,5 @@
     "observer": "ghcr.io/home-assistant/{arch}-hassio-observer",
     "multicast": "ghcr.io/home-assistant/{arch}-hassio-multicast"
   },
-  "core": "2025.11.3-ga.1"
+  "core": "2025.11.3-ga.2"
 }
