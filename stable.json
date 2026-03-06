@@ -1,6 +1,6 @@
 {
   "channel": "stable",
-  "supervisor": "2025.11.4",
+  "supervisor": "2025.11.4-ga.1",
   "homeassistant": {
     "default": "2025.11.3",
     "qemux86": "2025.11.3",
@@ -19,7 +19,7 @@
     "raspberrypi5-64": "2025.11.3",
     "yellow": "2025.11.3",
     "green": "2025.11.3",
-    "tinker": "latest",
+    "tinker": "2025.11.3-ga.1",
     "odroid-c2": "2025.11.3",
     "odroid-c4": "2025.11.3",
     "odroid-m1": "2025.11.3",
@@ -66,8 +66,8 @@
   "multicast": "2025.08.0",
   "observer": "2025.02.0",
   "image": {
-    "core": "greenautarky/{machine}-homeassistant",
-    "supervisor": "ghcr.io/ihost-open-source-project/{arch}-hassio-supervisor",
+    "core": "ghcr.io/greenautarky/{machine}-homeassistant",
+    "supervisor": "ghcr.io/greenautarky/{arch}-hassio-supervisor",
     "cli": "homeassistant/{arch}-hassio-cli",
     "audio": "homeassistant/{arch}-hassio-audio",
     "dns": "homeassistant/{arch}-hassio-dns",
@@ -76,12 +76,12 @@
   },
   "images": {
     "core": "ghcr.io/greenautarky/{machine}-homeassistant",
-    "supervisor": "ghcr.io/ihost-open-source-project/{arch}-hassio-supervisor",
+    "supervisor": "ghcr.io/greenautarky/{arch}-hassio-supervisor",
     "cli": "ghcr.io/home-assistant/{arch}-hassio-cli",
     "audio": "ghcr.io/home-assistant/{arch}-hassio-audio",
     "dns": "ghcr.io/home-assistant/{arch}-hassio-dns",
     "observer": "ghcr.io/home-assistant/{arch}-hassio-observer",
     "multicast": "ghcr.io/home-assistant/{arch}-hassio-multicast"
   },
-  "core": "latest"
+  "core": "2025.11.3-ga.1"
 }
