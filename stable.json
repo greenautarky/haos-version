@@ -46,7 +46,7 @@
     "generic-x86-64": "16.0",
     "generic-aarch64": "16.0",
     "khadas-vim3": "16.0",
-    "ihost": "16.3"
+    "ihost": "16.3.1.1"
   },
   "hassos-upgrade": {
     "11": "11.5",
@@ -59,7 +59,7 @@
     "4": "4.20",
     "3": "3.13"
   },
-  "ota": "https://github.com/greenautarky/ha-operating-system/releases/download/{version}/{os_name}_{board}-{version}.raucb",
+  "ota": "https://ota.greenautarky.com/releases/{version}/{os_name}_{board}-{version}.raucb",
   "cli": "2025.09.0",
   "dns": "2025.08.0",
   "audio": "2025.08.0",
