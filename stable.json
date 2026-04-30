@@ -24,7 +24,8 @@
     "odroid-c4": "2025.11.3.1",
     "odroid-m1": "2025.11.3.1",
     "odroid-n2": "2025.11.3.1",
-    "odroid-xu": "2025.11.3.1"
+    "odroid-xu": "2025.11.3.1",
+    "generic-aarch64": "2025.11.3.1"
   },
   "hassos": {
     "ova": "16.0",
@@ -46,7 +47,8 @@
     "generic-x86-64": "16.0",
     "generic-aarch64": "16.0",
     "khadas-vim3": "16.0",
-    "ihost": "16.3.1.1"
+    "ihost": "16.3.1.1",
+    "dsgw210": "21.0.0.1"
   },
   "hassos-upgrade": {
     "11": "11.5",
@@ -65,15 +67,6 @@
   "audio": "2025.08.0",
   "multicast": "2025.08.0",
   "observer": "2025.02.0",
-  "image": {
-    "core": "ghcr.io/greenautarky/{machine}-homeassistant",
-    "supervisor": "ghcr.io/greenautarky/{arch}-hassio-supervisor",
-    "cli": "homeassistant/{arch}-hassio-cli",
-    "audio": "homeassistant/{arch}-hassio-audio",
-    "dns": "homeassistant/{arch}-hassio-dns",
-    "observer": "homeassistant/{arch}-hassio-observer",
-    "multicast": "homeassistant/{arch}-hassio-multicast"
-  },
   "images": {
     "core": "ghcr.io/greenautarky/{machine}-homeassistant",
     "supervisor": "ghcr.io/greenautarky/{arch}-hassio-supervisor",
