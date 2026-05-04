@@ -1,6 +1,6 @@
 {
   "channel": "stable",
-  "supervisor": "2025.11.4.2",
+  "supervisor": "2025.11.4.1",
   "homeassistant": {
     "default": "2025.11.3.1",
     "qemux86": "2025.11.3.1",
@@ -46,7 +46,7 @@
     "generic-x86-64": "16.0",
     "generic-aarch64": "16.0",
     "khadas-vim3": "16.0",
-    "ihost": "16.3.1.2"
+    "ihost": "16.3.1.1"
   },
   "hassos-upgrade": {
     "11": "11.5",
