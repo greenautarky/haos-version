@@ -1,30 +1,30 @@
 {
   "channel": "stable",
-  "supervisor": "2025.11.4.3",
+  "supervisor": "2025.11.5.1",
   "homeassistant": {
-    "default": "2025.11.3.2",
-    "qemux86": "2025.11.3.2",
-    "qemux86-64": "2025.11.3.2",
-    "qemuarm": "2025.11.3.2",
-    "qemuarm-64": "2025.11.3.2",
-    "generic-x86-64": "2025.11.3.2",
-    "intel-nuc": "2025.11.3.2",
-    "khadas-vim3": "2025.11.3.2",
-    "raspberrypi": "2025.11.3.2",
-    "raspberrypi2": "2025.11.3.2",
-    "raspberrypi3": "2025.11.3.2",
-    "raspberrypi3-64": "2025.11.3.2",
-    "raspberrypi4": "2025.11.3.2",
-    "raspberrypi4-64": "2025.11.3.2",
-    "raspberrypi5-64": "2025.11.3.2",
-    "yellow": "2025.11.3.2",
-    "green": "2025.11.3.2",
-    "tinker": "2025.11.3.2",
-    "odroid-c2": "2025.11.3.2",
-    "odroid-c4": "2025.11.3.2",
-    "odroid-m1": "2025.11.3.2",
-    "odroid-n2": "2025.11.3.2",
-    "odroid-xu": "2025.11.3.2"
+    "default": "2025.11.3",
+    "qemux86": "2025.11.3",
+    "qemux86-64": "2025.11.3",
+    "qemuarm": "2025.11.3",
+    "qemuarm-64": "2025.11.3",
+    "generic-x86-64": "2025.11.3",
+    "intel-nuc": "2025.11.3",
+    "khadas-vim3": "2025.11.3",
+    "raspberrypi": "2025.11.3",
+    "raspberrypi2": "2025.11.3",
+    "raspberrypi3": "2025.11.3",
+    "raspberrypi3-64": "2025.11.3",
+    "raspberrypi4": "2025.11.3",
+    "raspberrypi4-64": "2025.11.3",
+    "raspberrypi5-64": "2025.11.3",
+    "yellow": "2025.11.3",
+    "green": "2025.11.3",
+    "tinker": "2025.11.3",
+    "odroid-c2": "2025.11.3",
+    "odroid-c4": "2025.11.3",
+    "odroid-m1": "2025.11.3",
+    "odroid-n2": "2025.11.3",
+    "odroid-xu": "2025.11.3"
   },
   "hassos": {
     "ova": "16.0",
@@ -66,7 +66,7 @@
   "multicast": "2025.08.0",
   "observer": "2025.02.0",
   "image": {
-    "core": "ghcr.io/greenautarky/{machine}-homeassistant",
+    "core": "ghcr.io/home-assistant/{machine}-homeassistant",
     "supervisor": "ghcr.io/greenautarky/{arch}-hassio-supervisor",
     "cli": "homeassistant/{arch}-hassio-cli",
     "audio": "homeassistant/{arch}-hassio-audio",
@@ -75,7 +75,7 @@
     "multicast": "homeassistant/{arch}-hassio-multicast"
   },
   "images": {
-    "core": "ghcr.io/greenautarky/{machine}-homeassistant",
+    "core": "ghcr.io/home-assistant/{machine}-homeassistant",
     "supervisor": "ghcr.io/greenautarky/{arch}-hassio-supervisor",
     "cli": "ghcr.io/home-assistant/{arch}-hassio-cli",
     "audio": "ghcr.io/home-assistant/{arch}-hassio-audio",
@@ -83,5 +83,5 @@
     "observer": "ghcr.io/home-assistant/{arch}-hassio-observer",
     "multicast": "ghcr.io/home-assistant/{arch}-hassio-multicast"
   },
-  "core": "2025.11.3.1"
+  "core": "2025.11.3"
 }
