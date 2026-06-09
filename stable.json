@@ -1,6 +1,6 @@
 {
   "channel": "stable",
-  "ga_release": "BOSv1.2.1",
+  "ga_release": "BOSv1.2.8",
   "supervisor": "2025.11.4.5",
   "homeassistant": {
     "default": "2025.11.3",
