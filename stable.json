@@ -1,7 +1,7 @@
 {
   "channel": "stable",
-  "ga_release": "BOSv1.2.12",
-  "supervisor": "2025.11.4.5",
+  "ga_release": "BOSv1.2.13",
+  "supervisor": "2025.11.4.6",
   "homeassistant": {
     "default": "2025.11.3",
     "qemux86": "2025.11.3",
@@ -47,7 +47,7 @@
     "generic-x86-64": "16.0",
     "generic-aarch64": "16.0",
     "khadas-vim3": "16.0",
-    "ihost": "16.3.1.6"
+    "ihost": "16.3.1.7"
   },
   "hassos-upgrade": {
     "11": "11.5",
