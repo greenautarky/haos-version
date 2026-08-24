@@ -1,0 +1,17 @@
+name: Channel drift
+
+# The version plane every device reads. A canary on `beta` must keep testing
+# what the fleet on `stable` will get — so the two files may differ only where
+# we intend them to.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths: ["*.json", "scripts/check_channel_drift.py", ".github/workflows/channel-drift.yml"]
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 scripts/check_channel_drift.py
