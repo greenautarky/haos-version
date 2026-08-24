@@ -14,7 +14,15 @@ import json
 import pathlib
 import sys
 
-ALLOWED = {"channel", "cli", "dns"}          # beta carries GA-built plugins
+ALLOWED = {
+    "channel",
+    "cli", "dns",      # GA-built plugin rebuilds (2026-08-24)
+    "supervisor",      # widened 2026-08-24: beta is "the next fleet state",
+                       # so it carries the Supervisor release under test
+                       # (2025.11.4.7 = the Core-image-override fix, #706).
+                       # This guard REFUSED the bump until the list was
+                       # widened on purpose — which is the design.
+}
 ALLOWED_IMAGES = {"cli", "dns"}
 
 def load(name):
