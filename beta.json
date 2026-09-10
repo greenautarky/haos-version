@@ -1,7 +1,7 @@
 {
-  "channel": "stable",
+  "channel": "beta",
   "ga_release": "BOSv1.2.21-rc2",
-  "supervisor": "2025.11.4.6",
+  "supervisor": "2025.11.5.3",
   "homeassistant": {
     "default": "2025.11.3",
     "qemux86": "2025.11.3",
@@ -61,8 +61,8 @@
     "3": "3.13"
   },
   "ota": "https://ota.greenautarky.com/releases/{version}/{os_name}_{board}-{version}.raucb",
-  "cli": "2025.10.0",
-  "dns": "2025.08.0",
+  "cli": "2025.10.1",
+  "dns": "2025.08.1",
   "audio": "2025.08.0",
   "multicast": "2025.08.0",
   "observer": "2025.02.0",
@@ -78,9 +78,9 @@
   "images": {
     "core": "ghcr.io/home-assistant/{machine}-homeassistant",
     "supervisor": "ghcr.io/greenautarky/{arch}-hassio-supervisor",
-    "cli": "ghcr.io/home-assistant/{arch}-hassio-cli",
+    "cli": "ghcr.io/greenautarky/{arch}-hassio-cli",
     "audio": "ghcr.io/home-assistant/{arch}-hassio-audio",
-    "dns": "ghcr.io/home-assistant/{arch}-hassio-dns",
+    "dns": "ghcr.io/greenautarky/{arch}-hassio-dns",
     "observer": "ghcr.io/home-assistant/{arch}-hassio-observer",
     "multicast": "ghcr.io/home-assistant/{arch}-hassio-multicast"
   },
