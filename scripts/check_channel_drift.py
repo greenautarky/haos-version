@@ -67,3 +67,35 @@ if problems:
 
 print(f"OK: beta.json differs from stable.json only in {sorted(ALLOWED)} "
       f"+ images{sorted(ALLOWED_IMAGES)}")
+
+
+# --- dev.json (2026-09-28): the canary-only channel for Core 2026.x ---------
+# dev is "beta plus the change under proof". It may differ from beta only in
+# the keys below; everything else must track beta, or a dev canary stops
+# testing what beta would get. Fails closed if dev.json is missing.
+DEV_ALLOWED = {"channel", "core", "homeassistant", "image", "supervisor"}
+DEV_ALLOWED_IMAGES = {"core"}
+
+dev = load("dev.json")
+dev_problems = []
+if dev.get("channel") != "dev":
+    dev_problems.append(f"  channel: dev.json says {dev.get('channel')!r}, must be 'dev'")
+for key in sorted(set(beta) | set(dev)):
+    if key in DEV_ALLOWED or key == "images":
+        continue
+    if beta.get(key) != dev.get(key):
+        dev_problems.append(f"  {key}: beta={beta.get(key)!r} dev={dev.get(key)!r}")
+b_img, d_img = beta.get("images", {}), dev.get("images", {})
+for key in sorted(set(b_img) | set(d_img)):
+    if key in DEV_ALLOWED_IMAGES:
+        continue
+    if b_img.get(key) != d_img.get(key):
+        dev_problems.append(f"  images.{key}: beta={b_img.get(key)!r} dev={d_img.get(key)!r}")
+
+if dev_problems:
+    print("FAIL: dev.json diverges from beta.json beyond the intended keys:")
+    print("\n".join(dev_problems))
+    sys.exit(1)
+
+print(f"OK: dev.json differs from beta.json only in {sorted(DEV_ALLOWED)} "
+      f"+ images{sorted(DEV_ALLOWED_IMAGES)}")
