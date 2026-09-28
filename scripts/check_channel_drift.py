@@ -22,8 +22,12 @@ ALLOWED = {
                        # (2025.11.4.7 = the Core-image-override fix, #706).
                        # This guard REFUSED the bump until the list was
                        # widened on purpose — which is the design.
+    "core", "homeassistant",  # widened 2026-09-28: beta carries Core 2026.x
+    "image",                  # from the GA armv7 build (upstream stopped
+                              # building armv7). `image` is the legacy key
+                              # older Supervisors read; kept in step.
 }
-ALLOWED_IMAGES = {"cli", "dns"}
+ALLOWED_IMAGES = {"cli", "dns", "core"}
 
 def load(name):
     p = pathlib.Path(name)
@@ -52,7 +56,7 @@ for key in sorted(set(s_img) | set(b_img)):
 
 # The intended divergences must ACTUALLY diverge — otherwise beta silently
 # stopped being the plugin canary and nobody noticed.
-inert = [k for k in ("cli", "dns") if stable.get(k) == beta.get(k)]
+inert = [k for k in ("cli", "dns", "core") if stable.get(k) == beta.get(k)]
 if inert:
     problems.append(
         f"  beta no longer diverges on {inert} — either the flip landed in stable "
