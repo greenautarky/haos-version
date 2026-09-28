@@ -1,7 +1,7 @@
 {
   "channel": "beta",
   "ga_release": "BOSv1.2.21-rc2",
-  "supervisor": "2025.11.5.3",
+  "supervisor": "2025.11.5.4",
   "homeassistant": {
     "default": "2026.8.2",
     "qemux86": "2025.11.3",
