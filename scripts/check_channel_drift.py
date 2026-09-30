@@ -73,8 +73,12 @@ print(f"OK: beta.json differs from stable.json only in {sorted(ALLOWED)} "
 # dev is "beta plus the change under proof". It may differ from beta only in
 # the keys below; everything else must track beta, or a dev canary stops
 # testing what beta would get. Fails closed if dev.json is missing.
-DEV_ALLOWED = {"channel", "core", "homeassistant", "image", "supervisor"}
-DEV_ALLOWED_IMAGES = {"core"}
+# widened 2026-09-30: the rebuilt plugins (cli, dns) and the GA builds of
+# audio, multicast and observer are the change under proof on the canaries;
+# beta follows once a canary has run them.
+DEV_ALLOWED = {"channel", "core", "homeassistant", "image", "supervisor",
+               "cli", "dns", "audio", "multicast", "observer"}
+DEV_ALLOWED_IMAGES = {"core", "audio", "multicast", "observer"}
 
 dev = load("dev.json")
 dev_problems = []
