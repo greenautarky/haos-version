@@ -84,5 +84,5 @@
     "observer": "ghcr.io/greenautarky/{arch}-hassio-observer",
     "multicast": "ghcr.io/greenautarky/{arch}-hassio-multicast"
   },
-  "core": "2026.8.2"
+  "core": "2026.8.2.1"
 }
