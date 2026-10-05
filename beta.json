@@ -1,9 +1,9 @@
 {
   "channel": "beta",
   "ga_release": "BOSv1.2.21-rc2",
-  "supervisor": "2025.11.5.3",
+  "supervisor": "2025.11.5.4",
   "homeassistant": {
-    "default": "2025.11.3",
+    "default": "2026.8.2",
     "qemux86": "2025.11.3",
     "qemux86-64": "2025.11.3",
     "qemuarm": "2025.11.3",
@@ -20,7 +20,7 @@
     "raspberrypi5-64": "2025.11.3",
     "yellow": "2025.11.3",
     "green": "2025.11.3",
-    "tinker": "2025.11.3",
+    "tinker": "2026.8.2",
     "odroid-c2": "2025.11.3",
     "odroid-c4": "2025.11.3",
     "odroid-m1": "2025.11.3",
@@ -67,7 +67,7 @@
   "multicast": "2025.08.0",
   "observer": "2025.02.0",
   "image": {
-    "core": "ghcr.io/home-assistant/{machine}-homeassistant",
+    "core": "ghcr.io/greenautarky/home-assistant-armv7",
     "supervisor": "ghcr.io/greenautarky/{arch}-hassio-supervisor",
     "cli": "homeassistant/{arch}-hassio-cli",
     "audio": "homeassistant/{arch}-hassio-audio",
@@ -76,7 +76,7 @@
     "multicast": "homeassistant/{arch}-hassio-multicast"
   },
   "images": {
-    "core": "ghcr.io/home-assistant/{machine}-homeassistant",
+    "core": "ghcr.io/greenautarky/home-assistant-armv7",
     "supervisor": "ghcr.io/greenautarky/{arch}-hassio-supervisor",
     "cli": "ghcr.io/greenautarky/{arch}-hassio-cli",
     "audio": "ghcr.io/home-assistant/{arch}-hassio-audio",
@@ -84,5 +84,5 @@
     "observer": "ghcr.io/home-assistant/{arch}-hassio-observer",
     "multicast": "ghcr.io/home-assistant/{arch}-hassio-multicast"
   },
-  "core": "2025.11.3"
+  "core": "2026.8.2"
 }
