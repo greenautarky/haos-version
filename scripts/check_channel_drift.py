@@ -103,3 +103,24 @@ if dev_problems:
 
 print(f"OK: dev.json differs from beta.json only in {sorted(DEV_ALLOWED)} "
       f"+ images{sorted(DEV_ALLOWED_IMAGES)}")
+
+
+# --- internal consistency (2026-10-05) --------------------------------------
+# Within ONE channel file the top-level `core` and the per-machine
+# `homeassistant.default` / `homeassistant.tinker` describe the same Core and
+# must agree. #18 raised the per-machine values to 2026.8.2.1 and left the
+# top-level `core` on 2026.8.2; nothing compared them, and the OS build's
+# XVER-06 caught it in the BOSv1.4.0-rc3 bake instead.
+inner = []
+for name in ("stable.json", "beta.json", "dev.json"):
+    ch = load(name)
+    top = ch.get("core")
+    ha = ch.get("homeassistant", {})
+    for k in ("default", "tinker"):
+        if k in ha and ha[k] != top:
+            inner.append(f"  {name}: core={top!r} but homeassistant.{k}={ha[k]!r}")
+if inner:
+    print("FAIL: a channel file disagrees with itself about the Core version:")
+    print("\n".join(inner))
+    sys.exit(1)
+print("OK: every channel file names one Core version (core == homeassistant.default/tinker)")
