@@ -1,9 +1,9 @@
 {
   "channel": "stable",
-  "ga_release": "BOSv1.2.21-rc2",
-  "supervisor": "2025.11.4.6",
+  "ga_release": "BOSv1.4.0-rc5",
+  "supervisor": "2025.11.5.5",
   "homeassistant": {
-    "default": "2025.11.3",
+    "default": "2026.8.2.1",
     "qemux86": "2025.11.3",
     "qemux86-64": "2025.11.3",
     "qemuarm": "2025.11.3",
@@ -20,7 +20,7 @@
     "raspberrypi5-64": "2025.11.3",
     "yellow": "2025.11.3",
     "green": "2025.11.3",
-    "tinker": "2025.11.3",
+    "tinker": "2026.8.2.1",
     "odroid-c2": "2025.11.3",
     "odroid-c4": "2025.11.3",
     "odroid-m1": "2025.11.3",
@@ -61,13 +61,13 @@
     "3": "3.13"
   },
   "ota": "https://ota.greenautarky.com/releases/{version}/{os_name}_{board}-{version}.raucb",
-  "cli": "2025.10.0",
-  "dns": "2025.08.0",
-  "audio": "2025.08.0",
-  "multicast": "2025.08.0",
-  "observer": "2025.02.0",
+  "cli": "2025.10.2",
+  "dns": "2025.08.2",
+  "audio": "2025.08.1",
+  "multicast": "2025.08.1",
+  "observer": "2025.02.1",
   "image": {
-    "core": "ghcr.io/home-assistant/{machine}-homeassistant",
+    "core": "ghcr.io/greenautarky/home-assistant-armv7",
     "supervisor": "ghcr.io/greenautarky/{arch}-hassio-supervisor",
     "cli": "homeassistant/{arch}-hassio-cli",
     "audio": "homeassistant/{arch}-hassio-audio",
@@ -76,13 +76,13 @@
     "multicast": "homeassistant/{arch}-hassio-multicast"
   },
   "images": {
-    "core": "ghcr.io/home-assistant/{machine}-homeassistant",
+    "core": "ghcr.io/greenautarky/home-assistant-armv7",
     "supervisor": "ghcr.io/greenautarky/{arch}-hassio-supervisor",
-    "cli": "ghcr.io/home-assistant/{arch}-hassio-cli",
-    "audio": "ghcr.io/home-assistant/{arch}-hassio-audio",
-    "dns": "ghcr.io/home-assistant/{arch}-hassio-dns",
-    "observer": "ghcr.io/home-assistant/{arch}-hassio-observer",
-    "multicast": "ghcr.io/home-assistant/{arch}-hassio-multicast"
+    "cli": "ghcr.io/greenautarky/{arch}-hassio-cli",
+    "audio": "ghcr.io/greenautarky/{arch}-hassio-audio",
+    "dns": "ghcr.io/greenautarky/{arch}-hassio-dns",
+    "observer": "ghcr.io/greenautarky/{arch}-hassio-observer",
+    "multicast": "ghcr.io/greenautarky/{arch}-hassio-multicast"
   },
-  "core": "2025.11.3"
+  "core": "2026.8.2.1"
 }

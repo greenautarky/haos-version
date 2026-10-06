@@ -1,0 +1,7 @@
+release: BOSv1.4.0-rc5
+# This branch is a PROMOTION CANDIDATE for the stable channel (ADR-0037).
+# stable.json here = dev.json (what the canaries proved) under the stable label.
+# The rc5 bake reads stable.json from THIS branch; no device polls this branch.
+# Do not merge. Promotion to main is a separate, explicit go at the 1.4.0 tag:
+# that PR deletes this file, sets ga_release to the final release and realigns
+# beta.json. scripts/check_channel_drift.py fails if this file reaches main.

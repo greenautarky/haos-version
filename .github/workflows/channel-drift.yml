@@ -5,9 +5,9 @@ name: Channel drift
 # we intend them to.
 on:
   push:
-    branches: [main]
+    branches: [main, "candidate/**"]
   pull_request:
-    paths: ["*.json", "scripts/check_channel_drift.py", ".github/workflows/channel-drift.yml"]
+    paths: ["*.json", "PROMOTION_CANDIDATE", "scripts/check_channel_drift.py", ".github/workflows/channel-drift.yml"]
 
 jobs:
   drift:

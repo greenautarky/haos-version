@@ -11,6 +11,7 @@ Intended divergences live in ALLOWED (top level) and ALLOWED_IMAGES. Everything
 else must be byte-equal. Widening either list is a deliberate, reviewable act.
 """
 import json
+import os
 import pathlib
 import sys
 
@@ -36,6 +37,61 @@ def load(name):
 
 stable, beta = load("stable.json"), load("beta.json")
 
+
+# --- promotion candidate (2026-10-06) ---------------------------------------
+# A `candidate/*` branch carries the stable.json the NEXT release promotes:
+# exactly what the dev canaries proved, under the stable label. The build of
+# that release reads it from the candidate branch; no device ever polls a
+# candidate branch (the Supervisor's version URL is compiled to `main`), and
+# the fleet's stable.json on main moves only at promotion.
+#
+# The candidate state is declared by a file, PROMOTION_CANDIDATE, never
+# inferred from a branch name: the guard must not change its verdict because a
+# ref is spelled differently. While it exists:
+#   * stable.json must equal dev.json in every key except `channel` and
+#     `ga_release` — a candidate that is NOT what the canaries ran is the very
+#     drift this file exists to stop, so this is stricter than the beta rule;
+#   * stable.json `ga_release` must equal the release the marker names;
+#   * beta.json is NOT compared with stable.json — during a candidate beta lags
+#     behind stable by design, and the promotion PR realigns it;
+#   * the marker must never reach main: on a push to main it is a failure. The
+#     promotion PR deletes it, and the normal beta rule then applies again.
+CANDIDATE_MARKER = pathlib.Path("PROMOTION_CANDIDATE")
+CANDIDATE_MAY_DIFFER_FROM_DEV = {"channel", "ga_release"}
+
+if CANDIDATE_MARKER.exists():
+    cand = []
+    if os.environ.get("GITHUB_REF") == "refs/heads/main":
+        cand.append("  PROMOTION_CANDIDATE is on main. The promotion PR must delete it "
+                    "and realign beta.json; a candidate marker on the branch the fleet "
+                    "polls switches this guard's beta check off for the fleet")
+    want_rel = ""
+    for line in CANDIDATE_MARKER.read_text().splitlines():
+        if line.startswith("release:"):
+            want_rel = line.split(":", 1)[1].strip()
+    if not want_rel:
+        cand.append("  PROMOTION_CANDIDATE has no `release: <GA release>` line — fail closed")
+    dev_c = load("dev.json")
+    if stable.get("channel") != "stable":
+        cand.append(f"  stable.json channel={stable.get('channel')!r}, must be 'stable'")
+    if want_rel and stable.get("ga_release") != want_rel:
+        cand.append(f"  stable.json ga_release={stable.get('ga_release')!r}, "
+                    f"PROMOTION_CANDIDATE names {want_rel!r}")
+    for key in sorted(set(stable) | set(dev_c)):
+        if key in CANDIDATE_MAY_DIFFER_FROM_DEV:
+            continue
+        if stable.get(key) != dev_c.get(key):
+            cand.append(f"  {key}: stable={stable.get(key)!r} dev={dev_c.get(key)!r}")
+    if cand:
+        print("FAIL: promotion candidate — stable.json is not the proven dev.json "
+              "under the stable label:")
+        print("\n".join(cand))
+        sys.exit(1)
+    print(f"OK: promotion candidate {want_rel}: stable.json == dev.json except "
+          f"{sorted(CANDIDATE_MAY_DIFFER_FROM_DEV)}")
+    print("NOTE: beta.json is NOT compared with stable.json while PROMOTION_CANDIDATE "
+          "exists — the promotion PR deletes the marker and realigns beta")
+
 problems = []
 for key in sorted(set(stable) | set(beta)):
     if key in ALLOWED or key == "images":
@@ -59,14 +115,19 @@ if inert:
         f"(then shrink ALLOWED) or beta drifted back; a beta channel that tests "
         f"nothing is worse than none")
 
-if problems:
+if CANDIDATE_MARKER.exists():
+    # Reported, not enforced: the candidate block above already held stable to
+    # dev, which is the stronger rule while a promotion is pending.
+    print(f"SKIPPED (promotion candidate): beta.json vs stable.json — "
+          f"{len(problems)} divergence(s) the promotion PR must resolve")
+elif problems:
     print("FAIL: beta.json diverges from stable.json beyond the intended keys:")
     print("\n".join(problems))
     print("\nFix: sync beta.json to stable.json, keeping only the intended plugin flip.")
     sys.exit(1)
-
-print(f"OK: beta.json differs from stable.json only in {sorted(ALLOWED)} "
-      f"+ images{sorted(ALLOWED_IMAGES)}")
+else:
+    print(f"OK: beta.json differs from stable.json only in {sorted(ALLOWED)} "
+          f"+ images{sorted(ALLOWED_IMAGES)}")
 
 
 # --- dev.json (2026-09-28): the canary-only channel for Core 2026.x ---------
