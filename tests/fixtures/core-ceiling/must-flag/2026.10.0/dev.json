@@ -1,0 +1,9 @@
+{
+  "channel": "dev",
+  "core": "2026.10.0",
+  "homeassistant": {
+    "default": "2026.10.0",
+    "qemuarm": "2025.11.3",
+    "tinker": "2026.10.0"
+  }
+}
