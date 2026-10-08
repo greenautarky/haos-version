@@ -1,0 +1,27 @@
+name: Core ceiling
+
+# Home Assistant Core 2026.9.x deletes the Supervisor's refresh token
+# (upstream home-assistant/core#179219). The Supervisor these channels ship can
+# only log in to Core with that token, and a rollback to 2026.8 does not bring
+# it back (persistent data migration). A channel file offering Core >= 2026.9.0
+# is a one-way door, so every branch is checked — main, candidate/*, feature
+# branches — on every push and every PR. Exceptions only via
+# scripts/core_ceiling_allowlist.json (reason + expiry, expired entries fail).
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  core-ceiling:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Self-test first: the gate must flag every must-flag fixture and pass
+      # every must-pass fixture, using the live script.
+      - run: python3 scripts/test_check_core_ceiling.py
+      - run: python3 scripts/check_core_ceiling.py

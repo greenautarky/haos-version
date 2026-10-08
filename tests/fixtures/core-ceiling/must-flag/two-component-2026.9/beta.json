@@ -1,0 +1,9 @@
+{
+  "channel": "beta",
+  "core": "2026.9",
+  "homeassistant": {
+    "default": "2026.9",
+    "qemuarm": "2025.11.3",
+    "tinker": "2026.9"
+  }
+}
