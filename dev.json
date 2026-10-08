@@ -1,7 +1,7 @@
 {
   "channel": "dev",
-  "ga_release": "BOSv1.2.21-rc2",
-  "supervisor": "2025.11.5.7",
+  "ga_release": "BOSv1.4.0-rc5",
+  "supervisor": "2025.11.5.9",
   "homeassistant": {
     "default": "2026.8.2.1",
     "qemux86": "2025.11.3",
@@ -47,7 +47,7 @@
     "generic-x86-64": "16.0",
     "generic-aarch64": "16.0",
     "khadas-vim3": "16.0",
-    "ihost": "16.3.1.9"
+    "ihost": "16.3.1.10"
   },
   "hassos-upgrade": {
     "11": "11.5",
@@ -62,7 +62,7 @@
   },
   "ota": "https://ota.greenautarky.com/releases/{version}/{os_name}_{board}-{version}.raucb",
   "cli": "2025.10.2",
-  "dns": "2025.08.2",
+  "dns": "2026.09.1",
   "audio": "2025.08.1",
   "multicast": "2025.08.1",
   "observer": "2025.02.1",

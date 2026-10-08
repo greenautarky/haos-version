@@ -25,3 +25,8 @@ jobs:
       # every must-pass fixture, using the live script.
       - run: python3 scripts/test_check_core_ceiling.py
       - run: python3 scripts/check_core_ceiling.py
+      # On candidate/* branches the three channel files must agree on every
+      # version (rule 61). A canary on channel dev was left on an older
+      # Supervisor because dev.json lagged stable.json (2026-10-08).
+      - run: python3 scripts/test_check_candidate_channels_agree.py
+      - run: python3 scripts/check_candidate_channels_agree.py
