@@ -1,0 +1,4 @@
+{
+  "_doc": "Exceptions to scripts/check_core_ceiling.py. Each entry: file, machine, version (exact), reason (non-empty), expires (YYYY-MM-DD). An expired entry fails the check.",
+  "entries": []
+}

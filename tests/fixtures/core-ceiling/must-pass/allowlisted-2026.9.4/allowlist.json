@@ -1,0 +1,25 @@
+{
+  "entries": [
+    {
+      "file": "dev.json",
+      "machine": "default",
+      "version": "2026.9.4",
+      "reason": "fixture: canary-only proof of a Supervisor that survives the token migration",
+      "expires": "2099-12-31"
+    },
+    {
+      "file": "dev.json",
+      "machine": "tinker",
+      "version": "2026.9.4",
+      "reason": "fixture: canary-only proof of a Supervisor that survives the token migration",
+      "expires": "2099-12-31"
+    },
+    {
+      "file": "dev.json",
+      "machine": "core",
+      "version": "2026.9.4",
+      "reason": "fixture: canary-only proof of a Supervisor that survives the token migration",
+      "expires": "2099-12-31"
+    }
+  ]
+}
