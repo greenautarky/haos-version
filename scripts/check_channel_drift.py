@@ -16,14 +16,13 @@ import sys
 
 ALLOWED = {
     "channel",
-    "cli", "dns",      # GA-built plugin rebuilds (2026-08-24)
-    "supervisor",      # widened 2026-08-24: beta is "the next fleet state",
-                       # so it carries the Supervisor release under test
-                       # (2025.11.4.7 = the Core-image-override fix, #706).
-                       # This guard REFUSED the bump until the list was
-                       # widened on purpose — which is the design.
+    # 2026-10-11 (D1, Thomas 2026-10-09): main/stable, beta and dev are
+    # promoted IDENTICAL for BOSv1.5.0 (check_candidate_channels_agree.py
+    # guards that). The 2026-08-24 divergences (cli, dns plugin rebuilds,
+    # supervisor under test) landed in stable, so the list shrinks to the one
+    # key that must differ. A future beta canary widens it again, on purpose.
 }
-ALLOWED_IMAGES = {"cli", "dns"}
+ALLOWED_IMAGES = set()
 
 def load(name):
     p = pathlib.Path(name)
@@ -52,7 +51,9 @@ for key in sorted(set(s_img) | set(b_img)):
 
 # The intended divergences must ACTUALLY diverge — otherwise beta silently
 # stopped being the plugin canary and nobody noticed.
-inert = [k for k in ("cli", "dns") if stable.get(k) == beta.get(k)]
+# Derived from ALLOWED (not a second hard-coded list): every key declared as an
+# intended divergence must actually diverge; `channel` always does.
+inert = [k for k in sorted(ALLOWED - {"channel"}) if stable.get(k) == beta.get(k)]
 if inert:
     problems.append(
         f"  beta no longer diverges on {inert} — either the flip landed in stable "
