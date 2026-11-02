@@ -5,7 +5,7 @@
   "homeassistant": {
     "default": "2026.8.2.1",
     "tinker": "2026.8.2.1",
-    "qemuarm-64": "2025.11.3"
+    "qemuarm-64": "2026.8.2"
   },
   "hassos": {
     "ihost": "18.3.1.6",

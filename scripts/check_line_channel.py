@@ -38,6 +38,13 @@ REL_RE = re.compile(r"^BOSv1\.6\.[0-9]+(-(rc|dev)[0-9]+)?$")
 PLUGINS = ("cli", "dns", "audio", "multicast", "observer")
 MACHINES = ("default", "tinker", "qemuarm-64")  # tinker = iHost, qemuarm-64 = DSGW-210
 BOARDS = ("ihost", "dsgw210")
+# CPU arch per board, PINNED here (never derived from the file under audit):
+# buildroot-ihost tinker_defconfig = armv7, buildroot-dsgw210 dsgw210_defconfig =
+# BR2_aarch64 / HASSIO_MACHINE qemuarm-64. The GA Core fork exists for armv7 only;
+# an aarch64 board runs the upstream Core (plan 2026-10-17, WP8 channel content),
+# and the Supervisor refuses an armv7 Core on aarch64 (DUT2, 2026-10-12).
+BOARD_ARCH = {"ihost": "armv7", "dsgw210": "aarch64"}
+UPSTREAM_CORE_RE = re.compile(r"^[0-9]{4}\.[0-9]{1,2}\.[0-9]+$")  # upstream calver, no GA .N suffix
 
 
 def ver(v):
@@ -110,6 +117,25 @@ def check_file(path, name):
                 e(f"images.{k} has no {{arch}} template")
         if not img.get("core"):
             e("images.core missing")
+    # ARCH-CORE: an aarch64 board must not be handed the armv7-only GA Core.
+    # A 2025.11 Supervisor takes ONE core image for every machine, so until the
+    # line carries the 2026.10 Supervisor with per-arch images (WP9) the file
+    # cannot be right for both boards. Allowed on a -devN label (bench only,
+    # printed as a WARN), a hard finding for any rc or final.
+    is_dev = isinstance(d.get("ga_release"), str) and re.search(r"-dev[0-9]+$", d["ga_release"])
+    arch_findings = []
+    if isinstance(hs, dict) and any(BOARD_ARCH.get(b) == "aarch64" for b in hs):
+        for sect in ("image", "images"):
+            core_img = str((d.get(sect) or {}).get("core", ""))
+            if "armv7" in core_img and "{arch}" not in core_img and "{machine}" not in core_img:
+                arch_findings.append(f"{sect}.core is {core_img!r} (armv7-only) but board dsgw210 is aarch64")
+    if isinstance(ha, dict) and "qemuarm-64" in ha and not UPSTREAM_CORE_RE.match(str(ha["qemuarm-64"])):
+        arch_findings.append(f"homeassistant.qemuarm-64 is {ha['qemuarm-64']!r}, want an upstream Core version (YYYY.M.P, no GA suffix)")
+    for f in arch_findings:
+        if is_dev:
+            print(f"WARN {MARKER} {name}: ARCH-CORE {f} (allowed on a -devN label; refused for rc/final until WP9)")
+        else:
+            e(f"ARCH-CORE {f}")
     ota = d.get("ota")
     if not isinstance(ota, str) or "{version}" not in ota or "{board}" not in ota:
         e("ota template must contain {version} and {board}")

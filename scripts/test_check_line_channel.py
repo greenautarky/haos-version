@@ -31,12 +31,20 @@ MUST_FLAG = {
     "no-arch-template": mut(lambda d: d["images"].update(dns="ghcr.io/x/dns")),
     "ota-no-board": mut(lambda d: d.update(ota="https://x/{version}.raucb")),
     "supervisor-unparseable": mut(lambda d: d.update(supervisor="latest")),
+    # ARCH-CORE: rc/final must not hand the aarch64 DSGW the armv7-only GA Core
+    "rc-armv7-core-on-aarch64": mut(lambda d: d.update(ga_release="BOSv1.6.0-rc1")),
+    "final-armv7-core-on-aarch64": mut(lambda d: d.update(ga_release="BOSv1.6.0")),
+    "rc-qemuarm64-ga-suffix": mut(lambda d: (d.update(ga_release="BOSv1.6.0-rc1"),
+                                             d["image"].update(core="ghcr.io/home-assistant/{machine}-homeassistant"), d["images"].update(core="ghcr.io/home-assistant/{machine}-homeassistant"),
+                                             d["homeassistant"].update({"qemuarm-64": "2026.8.2.1"}))),
 }
 MUST_PASS = {
     "real-file": real,
     "core-2026.9-with-supervisor-2026.10": mut(lambda d: (d.update(supervisor="2026.10.1.2"),
                                                        d["homeassistant"].update(tinker="2026.9.1"))),
-    "rc-label": mut(lambda d: d.update(ga_release="BOSv1.6.0-rc1")),
+    "rc-label-with-machine-template-core": mut(lambda d: (d.update(ga_release="BOSv1.6.0-rc1"),
+                                                      d["image"].update(core="ghcr.io/home-assistant/{machine}-homeassistant"),
+                                                      d["images"].update(core="ghcr.io/home-assistant/{machine}-homeassistant"))),
 }
 
 def run(root):
