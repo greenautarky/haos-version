@@ -1,0 +1,21 @@
+name: Line channel
+
+# The BOSv1.6 line (line/1.6/) is a separate, permanent path from the top-level
+# 1.5 channel files; see scripts/check_line_channel.py. Self-test first (it runs
+# the live script against must-flag and must-pass cases), then the real files.
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  line-channel:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 scripts/test_check_line_channel.py
+      - run: python3 scripts/check_line_channel.py
