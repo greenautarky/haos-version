@@ -3,8 +3,8 @@
   "ga_release": "BOSv1.6.0-dev1",
   "supervisor": "2025.11.5.9",
   "homeassistant": {
-    "default": "2026.8.2.1",
-    "tinker": "2026.8.2.1",
+    "default": "2026.8.2.2",
+    "tinker": "2026.8.2.2",
     "qemuarm-64": "2026.8.2"
   },
   "hassos": {
@@ -36,5 +36,5 @@
     "observer": "ghcr.io/greenautarky/{arch}-hassio-observer",
     "multicast": "ghcr.io/greenautarky/{arch}-hassio-multicast"
   },
-  "core": "2026.8.2.1"
+  "core": "2026.8.2.2"
 }
