@@ -25,21 +25,25 @@ MUST_FLAG = {
     "ga-release-is-1.5": mut(lambda d: d.update(ga_release="BOSv1.5.3")),
     "channel-label-mismatch": mut(lambda d: d.update(channel="beta")),
     "no-tinker-core": mut(lambda d: d["homeassistant"].pop("tinker")),
-    "no-dsgw-machine": mut(lambda d: d["homeassistant"].pop("qemuarm-64")),
+    # dev label: ARCH-CORE only WARNs there, so ONLY the rule under test can flag these two
+    "no-dsgw-machine": mut(lambda d: (d.update(ga_release="BOSv1.6.0-dev2"), d["hassos"].update(dsgw210="18.3.1.6"), d["homeassistant"].pop("qemuarm-64"))),
+    "no-ihost-board": mut(lambda d: d["hassos"].pop("ihost")),
+    "dsgw-listed-on-16": mut(lambda d: (d.update(ga_release="BOSv1.6.0-dev2"), d["hassos"].update(dsgw210="16.3.1.10"))),
     "hassos-16": mut(lambda d: d["hassos"].update(ihost="16.3.1.10")),
     "core-2026.9-old-supervisor": mut(lambda d: d["homeassistant"].update(tinker="2026.9.1")),
     "no-arch-template": mut(lambda d: d["images"].update(dns="ghcr.io/x/dns")),
     "ota-no-board": mut(lambda d: d.update(ota="https://x/{version}.raucb")),
     "supervisor-unparseable": mut(lambda d: d.update(supervisor="latest")),
     # ARCH-CORE: rc/final must not hand the aarch64 DSGW the armv7-only GA Core
-    "rc-armv7-core-on-aarch64": mut(lambda d: d.update(ga_release="BOSv1.6.0-rc1")),
-    "final-armv7-core-on-aarch64": mut(lambda d: d.update(ga_release="BOSv1.6.0")),
+    "rc-armv7-core-on-aarch64": mut(lambda d: (d.update(ga_release="BOSv1.6.0-rc1"), d["hassos"].update(dsgw210="18.3.1.6"))),
+    "final-armv7-core-on-aarch64": mut(lambda d: (d.update(ga_release="BOSv1.6.0"), d["hassos"].update(dsgw210="18.3.1.6"))),
     "rc-qemuarm64-ga-suffix": mut(lambda d: (d.update(ga_release="BOSv1.6.0-rc1"),
                                              d["image"].update(core="ghcr.io/home-assistant/{machine}-homeassistant"), d["images"].update(core="ghcr.io/home-assistant/{machine}-homeassistant"),
                                              d["homeassistant"].update({"qemuarm-64": "2026.8.2.1"}))),
 }
 MUST_PASS = {
     "real-file": real,
+    "dev-label-dsgw-listed": mut(lambda d: (d.update(ga_release="BOSv1.6.0-dev2"), d["hassos"].update(dsgw210="18.3.1.6"))),
     "core-2026.9-with-supervisor-2026.10": mut(lambda d: (d.update(supervisor="2026.10.1.2"),
                                                        d["homeassistant"].update(tinker="2026.9.1"))),
     "rc-label-with-machine-template-core": mut(lambda d: (d.update(ga_release="BOSv1.6.0-rc1"),

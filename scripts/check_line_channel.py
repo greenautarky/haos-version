@@ -13,7 +13,7 @@ What it checks, per channel file (fail closed, every unreadable thing is an erro
   * `ga_release` is a 1.6 label (BOSv1.6.N, optionally -rcN / -devN)
   * the keys the bake and the device read exist: supervisor, the five plugins,
     homeassistant.{default,tinker,qemuarm-64} (both boards' machines), images
-    with {arch} templates, hassos.{ihost,dsgw210} on the 18.x base, ota template
+    with {arch} templates, hassos.ihost (and dsgw210 when listed) on the 18.x base, ota template
   * a Core >= 2026.9 needs a Supervisor >= 2026.10 in the same file: Core 2026.9
     removes the refresh token the 2025.11 Supervisor logs in with. This is the
     line's replacement for scripts/check_core_ceiling.py, which stays strict on
@@ -37,7 +37,9 @@ CHANNELS = ("stable", "beta", "dev")
 REL_RE = re.compile(r"^BOSv1\.6\.[0-9]+(-(rc|dev)[0-9]+)?$")
 PLUGINS = ("cli", "dns", "audio", "multicast", "observer")
 MACHINES = ("default", "tinker", "qemuarm-64")  # tinker = iHost, qemuarm-64 = DSGW-210
-BOARDS = ("ihost", "dsgw210")
+BOARDS = ("ihost",)            # required on the line
+OPTIONAL_BOARDS = ("dsgw210",)  # may be absent: rc1 shipped iHost-only (Thomas 2026-11-05) until the
+                                # aarch64 GA image chain (WP9); if present, every rule below applies
 # CPU arch per board, PINNED here (never derived from the file under audit):
 # buildroot-ihost tinker_defconfig = armv7, buildroot-dsgw210 dsgw210_defconfig =
 # BR2_aarch64 / HASSIO_MACHINE qemuarm-64. The GA Core fork exists for armv7 only;
@@ -87,7 +89,10 @@ def check_file(path, name):
     if not isinstance(ha, dict):
         e("homeassistant map missing")
     else:
+        hs0 = d.get("hassos") if isinstance(d.get("hassos"), dict) else {}
         for m in MACHINES:
+            if m == "qemuarm-64" and "dsgw210" not in hs0:
+                continue  # the DSGW machine is only required while the DSGW board is on the line
             if m not in ha:
                 e(f"homeassistant.{m} missing (iHost=tinker, DSGW-210=qemuarm-64)")
         for m, v in ha.items():
@@ -104,7 +109,7 @@ def check_file(path, name):
     if not isinstance(hs, dict):
         e("hassos map missing")
     else:
-        for b in BOARDS:
+        for b in BOARDS + tuple(x for x in OPTIONAL_BOARDS if x in hs):
             v = hs.get(b)
             if not isinstance(v, str) or not v.startswith("18."):
                 e(f"hassos.{b} is {v!r}, want an 18.x version")
