@@ -46,10 +46,17 @@ OPTIONAL_BOARDS = ("dsgw210",)  # may be absent: rc1 shipped iHost-only (Thomas 
 # an aarch64 board runs the upstream Core (plan 2026-10-17, WP8 channel content),
 # and the Supervisor refuses an armv7 Core on aarch64 (DUT2, 2026-10-12).
 BOARD_ARCH = {"ihost": "armv7", "dsgw210": "aarch64"}
+# dev.json (DEV-SCOPE): the DSGW-210 dev channel. Pinned here, never derived from the file.
+DEV_FILE_STEM = "dev"
+DEV_CORE_IMAGE = "ghcr.io/greenautarky/home-assistant-aarch64"
+DEV_CORE_RE = re.compile(r"^[0-9]{4}\.[0-9]{1,2}\.[0-9]+(\.[0-9]+)?-dev$")
+DEV_REL_RE = re.compile(r"^BOSv1\.6\.[0-9]+-dev[0-9]+$")
 UPSTREAM_CORE_RE = re.compile(r"^[0-9]{4}\.[0-9]{1,2}\.[0-9]+$")  # upstream calver, no GA .N suffix
 
 
-def ver(v):
+def ver(v, allow_dev_suffix=False):
+    if allow_dev_suffix and isinstance(v, str) and v.endswith("-dev"):
+        v = v[: -len("-dev")]
     if not isinstance(v, str) or not v or not all(p.isdigit() for p in v.split(".")):
         raise ValueError(f"not a dotted-integer version: {v!r}")
     return tuple(int(p) for p in v.split("."))
@@ -72,6 +79,7 @@ def check_file(path, name):
         return [f"{MARKER} {name}: top level is not an object"]
     if d.get("channel") != path.stem:
         e(f"channel is {d.get('channel')!r}, the file name says {path.stem!r}")
+    dev_scope = path.stem == DEV_FILE_STEM
     if not isinstance(d.get("ga_release"), str) or not REL_RE.match(d["ga_release"]):
         e(f"ga_release {d.get('ga_release')!r} is not a BOSv1.6.x label")
     sup = None
@@ -93,11 +101,13 @@ def check_file(path, name):
         for m in MACHINES:
             if m == "qemuarm-64" and "dsgw210" not in hs0:
                 continue  # the DSGW machine is only required while the DSGW board is on the line
+            if dev_scope and m == "tinker":
+                continue  # DEV-SCOPE: no iHost Core in dev.json (checked below)
             if m not in ha:
                 e(f"homeassistant.{m} missing (iHost=tinker, DSGW-210=qemuarm-64)")
         for m, v in ha.items():
             try:
-                cores.append((m, ver(v)))
+                cores.append((m, ver(v, allow_dev_suffix=dev_scope)))
             except ValueError as ex:
                 e(f"homeassistant.{m}: {ex}")
     if sup is not None:
@@ -109,7 +119,7 @@ def check_file(path, name):
     if not isinstance(hs, dict):
         e("hassos map missing")
     else:
-        for b in BOARDS + tuple(x for x in OPTIONAL_BOARDS if x in hs):
+        for b in (("dsgw210",) if dev_scope else BOARDS + tuple(x for x in OPTIONAL_BOARDS if x in hs)):
             v = hs.get(b)
             if not isinstance(v, str) or not v.startswith("18."):
                 e(f"hassos.{b} is {v!r}, want an 18.x version")
@@ -129,12 +139,35 @@ def check_file(path, name):
     # printed as a WARN), a hard finding for any rc or final.
     is_dev = isinstance(d.get("ga_release"), str) and re.search(r"-dev[0-9]+$", d["ga_release"])
     arch_findings = []
-    if isinstance(hs, dict) and any(BOARD_ARCH.get(b) == "aarch64" for b in hs):
+    if dev_scope:
+        # DEV-SCOPE: DSGW-210 only. iHosts read stable.json and must not be reachable from here.
+        def f(msg):
+            errs.append(f"{MARKER} {name}: DEV-SCOPE {msg}")
+        if isinstance(hs, dict) and "ihost" in hs:
+            f("hassos lists ihost (dev.json is DSGW-210 only; iHosts stay on stable.json)")
+        if isinstance(ha, dict):
+            if "tinker" in ha:
+                f("homeassistant lists tinker (iHost Core) in the DSGW-only dev.json")
+            if "qemuarm-64" in ha and not DEV_CORE_RE.match(str(ha["qemuarm-64"])):
+                f(f"homeassistant.qemuarm-64 is {ha['qemuarm-64']!r}, want YYYY.M.P[.N]-dev (the GA aarch64 dev Core)")
+            if ha.get("default") != ha.get("qemuarm-64"):
+                f(f"homeassistant.default {ha.get('default')!r} differs from qemuarm-64 {ha.get('qemuarm-64')!r}")
+        if not (isinstance(d.get("ga_release"), str) and DEV_REL_RE.match(d["ga_release"])):
+            f(f"ga_release {d.get('ga_release')!r} is not a BOSv1.6.N-devN label")
+        if d.get("core") != (ha or {}).get("qemuarm-64"):
+            f(f"core {d.get('core')!r} differs from homeassistant.qemuarm-64")
+        for sect in ("image", "images"):
+            ci = (d.get(sect) or {}).get("core")
+            if ci != DEV_CORE_IMAGE:
+                f(f"{sect}.core is {ci!r}, want {DEV_CORE_IMAGE}")
+        if d.get("image") != d.get("images"):
+            f("image and images differ (the device would pull other plugin/Core images than the bake carries)")
+    elif isinstance(hs, dict) and any(BOARD_ARCH.get(b) == "aarch64" for b in hs):
         for sect in ("image", "images"):
             core_img = str((d.get(sect) or {}).get("core", ""))
             if "armv7" in core_img and "{arch}" not in core_img and "{machine}" not in core_img:
                 arch_findings.append(f"{sect}.core is {core_img!r} (armv7-only) but board dsgw210 is aarch64")
-    if isinstance(ha, dict) and "qemuarm-64" in ha and not UPSTREAM_CORE_RE.match(str(ha["qemuarm-64"])):
+    if not dev_scope and isinstance(ha, dict) and "qemuarm-64" in ha and not UPSTREAM_CORE_RE.match(str(ha["qemuarm-64"])):
         arch_findings.append(f"homeassistant.qemuarm-64 is {ha['qemuarm-64']!r}, want an upstream Core version (YYYY.M.P, no GA suffix)")
     for f in arch_findings:
         if is_dev:

@@ -17,6 +17,10 @@ FIX = REPO / "tests" / "fixtures" / "line-channel"
 if not CHECK.is_file() or not REAL.is_file():
     sys.exit("FAIL: live check or real channel file missing (fail closed)")
 real = json.loads(REAL.read_text())
+REAL_DEV = REPO / "line" / "1.6" / "dev.json"
+if not REAL_DEV.is_file():
+    sys.exit("FAIL: real dev.json missing (fail closed)")
+real_dev = json.loads(REAL_DEV.read_text())
 
 def mut(f):
     d = copy.deepcopy(real); f(d); return d
@@ -51,10 +55,51 @@ MUST_PASS = {
                                                       d["images"].update(core="ghcr.io/home-assistant/{machine}-homeassistant"))),
 }
 
+def dmut(f):
+    d = copy.deepcopy(real_dev); f(d); return d
+
+# dev.json (DEV-SCOPE): each must-flag is ONE mutation of the real dev.json, so only
+# the rule under test can flag it.
+DEV_MUST_FLAG = {
+    "dev-lists-ihost": dmut(lambda d: d["hassos"].update(ihost="18.3.1.6")),
+    "dev-lists-tinker-core": dmut(lambda d: d["homeassistant"].update(tinker="2026.10.4.3-dev")),
+    "dev-no-dsgw-board": dmut(lambda d: d["hassos"].pop("dsgw210")),
+    "dev-core-without-dev-suffix": dmut(lambda d: (d["homeassistant"].update({"qemuarm-64": "2026.10.4.3", "default": "2026.10.4.3"}), d.update(core="2026.10.4.3"))),
+    "dev-core-armv7-image": dmut(lambda d: (d["images"].update(core="ghcr.io/greenautarky/home-assistant-armv7"), d["image"].update(core="ghcr.io/greenautarky/home-assistant-armv7"))),
+    "dev-image-images-differ": dmut(lambda d: d["image"].update(dns="homeassistant/{arch}-hassio-dns")),
+    "dev-rc-label": dmut(lambda d: d.update(ga_release="BOSv1.6.0-rc1")),
+    "dev-core-2026.10-old-supervisor": dmut(lambda d: d.update(supervisor="2025.11.5.10")),
+    "dev-default-differs": dmut(lambda d: d["homeassistant"].update(default="2026.8.2.2")),
+    "dev-core-key-differs": dmut(lambda d: d.update(core="2026.10.4.2-dev")),
+}
+DEV_MUST_PASS = {
+    "real-dev-file": real_dev,
+    "dev-core-3-part-version": dmut(lambda d: (d["homeassistant"].update({"qemuarm-64": "2026.10.5-dev", "default": "2026.10.5-dev"}), d.update(core="2026.10.5-dev"))),
+}
+# the -dev Core suffix is a dev.json-only exception: everywhere else it stays refused
+SUFFIX_ELSEWHERE_MUST_FLAG = {
+    "dev-suffix-core-in-stable": mut(lambda d: (d.update(supervisor="2026.10.5.1"), d["homeassistant"].update(tinker="2026.10.4.3-dev"))),
+    "dev-suffix-core-in-beta": ("beta.json", mut(lambda d: (d.update(channel="beta", supervisor="2026.10.5.1"), d["homeassistant"].update(tinker="2026.10.4.3-dev")))),
+}
+
 def run(root):
     return subprocess.run([sys.executable, str(CHECK), "--root", str(root)], capture_output=True, text=True)
 
 fails, n = [], {"must-flag": 0, "must-pass": 0}
+WANT = {  # the specific rule that must fire (not merely "something failed")
+    "dev-lists-ihost": "DEV-SCOPE hassos lists ihost",
+    "dev-lists-tinker-core": "DEV-SCOPE homeassistant lists tinker",
+    "dev-no-dsgw-board": "hassos.dsgw210 is None",
+    "dev-core-without-dev-suffix": "want YYYY.M.P[.N]-dev",
+    "dev-core-armv7-image": "images.core is 'ghcr.io/greenautarky/home-assistant-armv7'",
+    "dev-image-images-differ": "image and images differ",
+    "dev-rc-label": "is not a BOSv1.6.N-devN label",
+    "dev-core-2026.10-old-supervisor": "supervisor is 2025.11.5.10",
+    "dev-default-differs": "homeassistant.default",
+    "dev-core-key-differs": "core '2026.10.4.2-dev' differs",
+    "dev-suffix-core-in-stable": "homeassistant.tinker: not a dotted-integer version",
+    "dev-suffix-core-in-beta": "homeassistant.tinker: not a dotted-integer version",
+}
 def case(kind, name, files):
     with tempfile.TemporaryDirectory() as t:
         d = pathlib.Path(t) / "line" / "1.6"; d.mkdir(parents=True)
@@ -62,11 +107,20 @@ def case(kind, name, files):
             (d / fn).write_text(content if isinstance(content, str) else json.dumps(content))
         r = run(t); out = r.stdout + r.stderr; n[kind] += 1
         want = (r.returncode in (1, 2) and "LINE-CHANNEL" in out) if kind == "must-flag" else r.returncode == 0
+        if want and name in WANT and WANT[name] not in out:
+            want = False; out += f"\n(wanted rule text not found: {WANT[name]!r})"
         if not want:
             fails.append(f"{kind}/{name}: rc={r.returncode}\n{out}")
 
 for name, d in MUST_FLAG.items(): case("must-flag", name, {"stable.json": d})
 for name, d in MUST_PASS.items(): case("must-pass", name, {"stable.json": d})
+for name, d in DEV_MUST_FLAG.items(): case("must-flag", name, {"stable.json": real, "dev.json": d})
+for name, d in DEV_MUST_PASS.items(): case("must-pass", name, {"stable.json": real, "dev.json": d})
+for name, d in SUFFIX_ELSEWHERE_MUST_FLAG.items():
+    fn, body = d if isinstance(d, tuple) else ("stable.json", d)
+    files = {"stable.json": real}; files[fn] = body
+    case("must-flag", name, files)
+case("must-pass", "stable-and-dev-together", {"stable.json": real, "dev.json": real_dev})
 case("must-flag", "invalid-json", {"stable.json": "{nope"})
 case("must-flag", "only-beta-no-stable", {"beta.json": mut(lambda d: d.update(channel="beta"))})
 case("must-flag", "unknown-channel-name", {"stable.json": real, "weird.json": real})
