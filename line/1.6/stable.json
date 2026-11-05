@@ -1,15 +1,14 @@
 {
   "channel": "stable",
-  "ga_release": "BOSv1.6.0-dev1",
-  "supervisor": "2025.11.5.9",
+  "ga_release": "BOSv1.6.0-rc1",
+  "supervisor": "2025.11.5.10",
   "homeassistant": {
     "default": "2026.8.2.2",
     "tinker": "2026.8.2.2",
     "qemuarm-64": "2026.8.2"
   },
   "hassos": {
-    "ihost": "18.3.1.6",
-    "dsgw210": "18.3.1.6"
+    "ihost": "18.3.1.6"
   },
   "hassos-upgrade": {},
   "ota": "https://ota.greenautarky.com/releases/{version}/{os_name}_{board}-{version}.raucb",
