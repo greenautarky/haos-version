@@ -1,0 +1,8 @@
+{
+  "ga_release": "BOSv1.6.0-rc1",
+  "component_digest": "9f9801d839f1fb7042d601d96b85bff49bb1bd3a25635d48c0cfd15f13500a0f",
+  "gate": {
+    "name": "baseline",
+    "note": "Set shipped to devices by BOSv1.6.0-rc1/rc2 before the promotion gate existed (Odoo #1610). Only BOSv1.6.0-rc1 may use the baseline gate."
+  }
+}

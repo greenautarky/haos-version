@@ -22,6 +22,13 @@ if not REAL_DEV.is_file():
     sys.exit("FAIL: real dev.json missing (fail closed)")
 real_dev = json.loads(REAL_DEV.read_text())
 
+REAL_RC = REPO / "line" / "1.6" / "rc.json"
+REAL_PROMOTED = REPO / "line" / "1.6" / "promoted.json"
+if not REAL_RC.is_file() or not REAL_PROMOTED.is_file():
+    sys.exit("FAIL: real rc.json / promoted.json missing (fail closed)")
+real_rc = json.loads(REAL_RC.read_text())
+real_promoted = json.loads(REAL_PROMOTED.read_text())
+
 def mut(f):
     d = copy.deepcopy(real); f(d); return d
 
@@ -54,6 +61,9 @@ MUST_PASS = {
                                                       d["image"].update(core="ghcr.io/home-assistant/{machine}-homeassistant"),
                                                       d["images"].update(core="ghcr.io/home-assistant/{machine}-homeassistant"))),
 }
+
+def dmut_rc(f):
+    d = copy.deepcopy(real_rc); f(d); return d
 
 def dmut(f):
     d = copy.deepcopy(real_dev); f(d); return d
@@ -100,13 +110,34 @@ WANT = {  # the specific rule that must fire (not merely "something failed")
     "dev-suffix-core-in-stable": "homeassistant.tinker: not a dotted-integer version",
     "dev-suffix-core-in-beta": "homeassistant.tinker: not a dotted-integer version",
 }
+def digest(path):
+    r = subprocess.run([sys.executable, str(CHECK), "--print-digest", str(path)], capture_output=True, text=True)
+    if r.returncode != 0: sys.exit(f"FAIL: live --print-digest failed: {r.stdout}{r.stderr}")
+    return r.stdout.strip()
+
+# must-pass cases about something OTHER than the promotion, whose stable.json carries a -dev label
+# (bench-only ARCH-CORE allowance): their only legitimate finding is the PROMOTION rule.
+PROMO_EXEMPT = {"dev-label-dsgw-listed"}
+
 def case(kind, name, files):
     with tempfile.TemporaryDirectory() as t:
         d = pathlib.Path(t) / "line" / "1.6"; d.mkdir(parents=True)
         for fn, content in files.items():
-            (d / fn).write_text(content if isinstance(content, str) else json.dumps(content))
+            if content is not None:
+                (d / fn).write_text(content if isinstance(content, str) else json.dumps(content))
+        if "promoted.json" not in files and (d / "stable.json").is_file():
+            # every case that is not ABOUT the promotion record gets a matching one, built
+            # with the LIVE digest function, so only the rule under test can flag it
+            try:
+                st = json.loads((d / "stable.json").read_text())
+                (d / "promoted.json").write_text(json.dumps({"ga_release": real_promoted["ga_release"], "component_digest": digest(d / "stable.json"), "gate": real_promoted["gate"]}))
+            except (json.JSONDecodeError, SystemExit):
+                pass
         r = run(t); out = r.stdout + r.stderr; n[kind] += 1
         want = (r.returncode in (1, 2) and "LINE-CHANNEL" in out) if kind == "must-flag" else r.returncode == 0
+        if kind == "must-pass" and name in PROMO_EXEMPT:
+            errs = [l for l in out.splitlines() if l.startswith("LINE-CHANNEL")]
+            want = r.returncode == 1 and bool(errs) and all("PROMOTION" in l for l in errs)
         if want and name in WANT and WANT[name] not in out:
             want = False; out += f"\n(wanted rule text not found: {WANT[name]!r})"
         if not want:
@@ -120,6 +151,56 @@ for name, d in SUFFIX_ELSEWHERE_MUST_FLAG.items():
     fn, body = d if isinstance(d, tuple) else ("stable.json", d)
     files = {"stable.json": real}; files[fn] = body
     case("must-flag", name, files)
+# rc.json (Odoo #1610): validated like stable.json, -rcN label only
+RC_MUST_FLAG = {
+    "rc-channel-label-mismatch": mut(lambda d: d.update(channel="stable", ga_release="BOSv1.6.0-rc3")),
+    "rc-final-label": dmut_rc(lambda d: d.update(ga_release="BOSv1.6.0")),
+    "rc-dev-label": dmut_rc(lambda d: d.update(ga_release="BOSv1.6.0-dev2")),
+    "rc-no-supervisor-key": dmut_rc(lambda d: d.pop("supervisor")),
+    "rc-core-2026.10-old-supervisor": dmut_rc(lambda d: d.update(supervisor="2025.11.5.10")),
+    "rc-no-arch-template": dmut_rc(lambda d: d["images"].update(dns="ghcr.io/x/dns")),
+}
+RC_WANT = {
+    "rc-final-label": "is not an -rcN label",
+    "rc-dev-label": "is not an -rcN label",
+    "rc-core-2026.10-old-supervisor": "supervisor is 2025.11.5.10",
+    "rc-channel-label-mismatch": "the file name says 'rc'",
+}
+for name, d in RC_MUST_FLAG.items():
+    WANT[name] = RC_WANT.get(name, WANT.get(name, "LINE-CHANNEL"))
+    case("must-flag", name, {"stable.json": real, "rc.json": d})
+case("must-pass", "rc-ahead-of-stable", {"stable.json": real, "rc.json": real_rc})
+case("must-pass", "rc-equals-stable-set-other-channel-label", {"stable.json": real, "rc.json": dict(real, channel="rc")})
+# PROMOTION: stable.json may only name a set an rc proved
+GATE = {"name": "k31-fresh-flash", "result": "pass", "bundle_sha256": "a" * 64, "record": "ga-ops:gates/line-1.6/BOSv1.6.0-rc3.json"}
+def rec(**kw):
+    r = {"ga_release": real["ga_release"], "component_digest": digest(REAL), "gate": real_promoted["gate"]}; r.update(kw); return r
+PROMO_MUST_FLAG = {
+    "promo-record-missing": ({"stable.json": real, "promoted.json": None}, "promoted.json missing"),
+    "promo-stable-edited-without-record": ({"stable.json": mut(lambda d: d.update(supervisor="2026.10.5.1", homeassistant=dict(d["homeassistant"], tinker="2026.10.4.4", default="2026.10.4.4"))), "promoted.json": rec()}, "differs from the promoted"),
+    "promo-stable-is-unproven-rc-set": ({"stable.json": dict(real_rc, channel="stable"), "promoted.json": rec()}, "differs from the promoted"),
+    "promo-release-mismatch": ({"stable.json": real, "promoted.json": rec(ga_release="BOSv1.6.0-rc2")}, "is not the promoted rc"),
+    "promo-digest-not-a-sha256": ({"stable.json": real, "promoted.json": rec(component_digest="xyz")}, "component_digest is not a sha256"),
+    "promo-gate-failed": ({"stable.json": real, "promoted.json": rec(gate=dict(GATE, result="fail"))}, "want 'pass'"),
+    "promo-gate-no-bundle-digest": ({"stable.json": real, "promoted.json": rec(gate={k: v for k, v in GATE.items() if k != "bundle_sha256"})}, "bundle_sha256"),
+    "promo-gate-unknown-name": ({"stable.json": real, "promoted.json": rec(gate={"name": "trust-me"})}, "is not 'k31-fresh-flash'"),
+    "promo-record-not-json": ({"stable.json": real, "promoted.json": "{nope"}, "cannot read"),
+}
+for name, (files, want) in PROMO_MUST_FLAG.items():
+    WANT[name] = want
+    case("must-flag", name, files)
+# the baseline gate is pinned to rc1: rc3 declaring itself a baseline is refused with the baseline rule
+s3 = dict(real, ga_release="BOSv1.6.0-rc3")
+WANT["promo-baseline-claimed-by-rc3"] = "only allowed for"
+case("must-flag", "promo-baseline-claimed-by-rc3", {"stable.json": s3, "promoted.json": {"ga_release": "BOSv1.6.0-rc3", "component_digest": "0" * 64, "gate": {"name": "baseline"}}})
+with tempfile.TemporaryDirectory() as t:       # same, but with the digest right: ONLY the baseline rule may fire
+    q = pathlib.Path(t) / "s.json"; q.write_text(json.dumps(s3))
+    WANT["promo-baseline-claimed-by-rc3-digest-ok"] = "only allowed for"
+    case("must-flag", "promo-baseline-claimed-by-rc3-digest-ok", {"stable.json": s3, "promoted.json": {"ga_release": "BOSv1.6.0-rc3", "component_digest": digest(q), "gate": {"name": "baseline"}}})
+    # KNOWN-GOOD: a real promotion (rc3 set, gated) passes
+    s_promoted = dict(real_rc, channel="stable"); q.write_text(json.dumps(s_promoted))
+    case("must-pass", "promo-gated-rc3-promoted", {"stable.json": s_promoted, "rc.json": real_rc, "promoted.json": {"ga_release": "BOSv1.6.0-rc3", "component_digest": digest(q), "gate": GATE}})
+case("must-pass", "promo-real-record", {"stable.json": real, "promoted.json": real_promoted})
 case("must-pass", "stable-and-dev-together", {"stable.json": real, "dev.json": real_dev})
 case("must-flag", "invalid-json", {"stable.json": "{nope"})
 case("must-flag", "only-beta-no-stable", {"beta.json": mut(lambda d: d.update(channel="beta"))})
