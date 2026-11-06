@@ -10,6 +10,13 @@ running a 1.6 OS poll these files.
 What it checks, per channel file (fail closed, every unreadable thing is an error):
   * at least one channel file exists, and stable.json is among them
   * valid JSON; `channel` equals the file name; no unknown channel name
+  * rc.json (Odoo #1610): the file an rc BAKE reads. Devices never poll it. It is
+    validated like stable.json, and its ga_release must be an -rcN label.
+  * PROMOTION (Odoo #1610): stable.json is what every device of the line polls, so
+    it may only name a set that an rc proved. line/1.6/promoted.json records which
+    rc (ga_release) and the digest of its version-bearing content; stable.json must
+    hash to that digest, and the record must carry the gate evidence (or be the one
+    pinned pre-gate baseline). A stable.json edit without a matching record fails.
   * `ga_release` is a 1.6 label (BOSv1.6.N, optionally -rcN / -devN)
   * the keys the bake and the device read exist: supervisor, the five plugins,
     homeassistant.{default,tinker,qemuarm-64} (both boards' machines), images
@@ -26,6 +33,7 @@ Usage: check_line_channel.py [--root DIR]     (DIR contains line/1.6/)
 Exit: 0 clean, 1 findings, 2 cannot check.
 """
 import argparse
+import hashlib
 import json
 import pathlib
 import re
@@ -33,7 +41,14 @@ import sys
 
 MARKER = "LINE-CHANNEL"
 LINE_DIR = pathlib.Path("line") / "1.6"
-CHANNELS = ("stable", "beta", "dev")
+CHANNELS = ("stable", "rc", "beta", "dev")
+RC_REL_RE = re.compile(r"^BOSv1\.6\.[0-9]+-rc[0-9]+$")
+PROMOTED = "promoted.json"
+# The one stable.json that was never gated: the set rc1 and rc2 devices already run
+# (before #1610 existed). PINNED here, never read from the record: a record may not
+# declare itself a baseline for any other release.
+BASELINE_RELEASE = "BOSv1.6.0-rc1"
+SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 REL_RE = re.compile(r"^BOSv1\.6\.[0-9]+(-(rc|dev)[0-9]+)?$")
 PLUGINS = ("cli", "dns", "audio", "multicast", "observer")
 MACHINES = ("default", "tinker", "qemuarm-64")  # tinker = iHost, qemuarm-64 = DSGW-210
@@ -52,6 +67,13 @@ DEV_CORE_IMAGE = "ghcr.io/greenautarky/home-assistant-aarch64"
 DEV_CORE_RE = re.compile(r"^[0-9]{4}\.[0-9]{1,2}\.[0-9]+(\.[0-9]+)?-dev$")
 DEV_REL_RE = re.compile(r"^BOSv1\.6\.[0-9]+-dev[0-9]+$")
 UPSTREAM_CORE_RE = re.compile(r"^[0-9]{4}\.[0-9]{1,2}\.[0-9]+$")  # upstream calver, no GA .N suffix
+
+
+def component_digest(d):
+    """sha256 over the version-bearing content of a channel file: everything except the
+    `channel` label (a promoted stable.json is its rc.json with channel renamed)."""
+    body = {k: v for k, v in d.items() if k != "channel"}
+    return hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
 
 
 def ver(v, allow_dev_suffix=False):
@@ -82,6 +104,8 @@ def check_file(path, name):
     dev_scope = path.stem == DEV_FILE_STEM
     if not isinstance(d.get("ga_release"), str) or not REL_RE.match(d["ga_release"]):
         e(f"ga_release {d.get('ga_release')!r} is not a BOSv1.6.x label")
+    if path.stem == "rc" and isinstance(d.get("ga_release"), str) and not RC_REL_RE.match(d["ga_release"]):
+        e(f"ga_release {d.get('ga_release')!r} is not an -rcN label (rc.json is what an rc bake reads)")
     sup = None
     try:
         sup = ver(d.get("supervisor"))
@@ -180,10 +204,61 @@ def check_file(path, name):
     return errs
 
 
+def check_promotion(d):
+    """stable.json must be a set an rc proved (Odoo #1610). Returns findings."""
+    M = f"{MARKER} PROMOTION"
+    sp, rp = d / "stable.json", d / PROMOTED
+    if not rp.is_file():
+        return [f"{M}: {PROMOTED} missing - stable.json is device-facing and may only name a promoted set"]
+    try:
+        rec = json.loads(rp.read_text(encoding="utf-8"))
+        stable = json.loads(sp.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as ex:
+        return [f"{M}: cannot read {PROMOTED} / stable.json ({ex})"]
+    if not isinstance(rec, dict) or not isinstance(stable, dict):
+        return [f"{M}: {PROMOTED} or stable.json is not an object"]
+    errs = []
+    rel = rec.get("ga_release")
+    if not isinstance(rel, str) or not RC_REL_RE.match(rel):
+        errs.append(f"{M}: {PROMOTED} ga_release {rel!r} is not an -rcN label")
+    elif stable.get("ga_release") != rel:
+        errs.append(f"{M}: stable.json ga_release {stable.get('ga_release')!r} is not the promoted rc {rel!r}")
+    want = rec.get("component_digest")
+    if not isinstance(want, str) or not SHA256_RE.match(want):
+        errs.append(f"{M}: {PROMOTED} component_digest is not a sha256")
+    elif component_digest(stable) != want:
+        errs.append(f"{M}: stable.json content digest {component_digest(stable)[:12]}... differs from the promoted "
+                    f"record {want[:12]}... - stable.json names a set no rc gate has proven (or the record was not updated)")
+    gate = rec.get("gate")
+    if not isinstance(gate, dict):
+        errs.append(f"{M}: {PROMOTED} has no gate object")
+    elif gate.get("name") == "baseline":
+        if rel != BASELINE_RELEASE:
+            errs.append(f"{M}: gate 'baseline' is only allowed for {BASELINE_RELEASE} (pre-gate set), not {rel!r}")
+    elif gate.get("name") == "k31-fresh-flash":
+        if gate.get("result") != "pass":
+            errs.append(f"{M}: gate result is {gate.get('result')!r}, want 'pass'")
+        if not (isinstance(gate.get("bundle_sha256"), str) and SHA256_RE.match(gate["bundle_sha256"])):
+            errs.append(f"{M}: gate.bundle_sha256 is not a sha256")
+        if not (isinstance(gate.get("record"), str) and gate["record"]):
+            errs.append(f"{M}: gate.record (pointer to the private gate record) missing")
+    else:
+        errs.append(f"{M}: gate.name {gate.get('name')!r} is not 'k31-fresh-flash' (or the pinned baseline)")
+    return errs
+
+
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument("--print-digest", metavar="FILE", help="print the component digest of a channel file and exit")
     ap.add_argument("--root", default=str(pathlib.Path(__file__).resolve().parent.parent))
     a = ap.parse_args()
+    if a.print_digest:
+        try:
+            print(component_digest(json.loads(pathlib.Path(a.print_digest).read_text(encoding="utf-8"))))
+        except (OSError, json.JSONDecodeError, AttributeError) as ex:
+            print(f"{MARKER} cannot digest {a.print_digest}: {ex}")
+            return 2
+        return 0
     d = pathlib.Path(a.root) / LINE_DIR
     files = sorted(d.glob("*.json")) if d.is_dir() else []
     if not files:
@@ -191,15 +266,19 @@ def main():
         return 2
     errs = []
     for f in files:
+        if f.name == PROMOTED:
+            continue
         if f.stem not in CHANNELS:
             errs.append(f"{MARKER} {f.name}: not a channel name {CHANNELS}")
             continue
         errs += check_file(f, f.name)
     if not (d / "stable.json").is_file():
         errs.append(f"{MARKER} stable.json missing")
+    else:
+        errs += check_promotion(d)
     for x in errs:
         print(x)
-    print(f"line channel: {len(files)} file(s) inspected, {len(errs)} finding(s)")
+    print(f"line channel: {len([f for f in files if f.name != PROMOTED])} file(s) inspected, {len(errs)} finding(s)")
     return 1 if errs else 0
 
 
