@@ -34,7 +34,7 @@ MUST_FLAG = {
     "no-ihost-board": mut(lambda d: d["hassos"].pop("ihost")),
     "dsgw-listed-on-16": mut(lambda d: (d.update(ga_release="BOSv1.6.0-dev2"), d["hassos"].update(dsgw210="16.3.1.10"))),
     "hassos-16": mut(lambda d: d["hassos"].update(ihost="16.3.1.10")),
-    "core-2026.9-old-supervisor": mut(lambda d: (d.update(supervisor="2025.11.5.10"), d["homeassistant"].update(tinker="2026.9.1"))),  # supervisor pinned: must not depend on the live file
+    "core-2026.9-old-supervisor": mut(lambda d: d["homeassistant"].update(tinker="2026.9.1")),
     "no-arch-template": mut(lambda d: d["images"].update(dns="ghcr.io/x/dns")),
     "ota-no-board": mut(lambda d: d.update(ota="https://x/{version}.raucb")),
     "supervisor-unparseable": mut(lambda d: d.update(supervisor="latest")),
