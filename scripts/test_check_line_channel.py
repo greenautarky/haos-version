@@ -197,9 +197,9 @@ with tempfile.TemporaryDirectory() as t:       # same, but with the digest right
     q = pathlib.Path(t) / "s.json"; q.write_text(json.dumps(s3))
     WANT["promo-baseline-claimed-by-rc3-digest-ok"] = "only allowed for"
     case("must-flag", "promo-baseline-claimed-by-rc3-digest-ok", {"stable.json": s3, "promoted.json": {"ga_release": "BOSv1.6.0-rc3", "component_digest": digest(q), "gate": {"name": "baseline"}}})
-    # KNOWN-GOOD: a real promotion (rc3 set, gated) passes
+    # KNOWN-GOOD: a real promotion of the live rc set (gated) passes; the rc label comes from rc.json
     s_promoted = dict(real_rc, channel="stable"); q.write_text(json.dumps(s_promoted))
-    case("must-pass", "promo-gated-rc3-promoted", {"stable.json": s_promoted, "rc.json": real_rc, "promoted.json": {"ga_release": "BOSv1.6.0-rc3", "component_digest": digest(q), "gate": GATE}})
+    case("must-pass", "promo-gated-rc-promoted", {"stable.json": s_promoted, "rc.json": real_rc, "promoted.json": {"ga_release": real_rc["ga_release"], "component_digest": digest(q), "gate": GATE}})
 case("must-pass", "promo-real-record", {"stable.json": real, "promoted.json": real_promoted})
 case("must-pass", "stable-and-dev-together", {"stable.json": real, "dev.json": real_dev})
 case("must-flag", "invalid-json", {"stable.json": "{nope"})
