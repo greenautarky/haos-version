@@ -64,7 +64,11 @@ BOARD_ARCH = {"ihost": "armv7", "dsgw210": "aarch64"}
 # dev.json (DEV-SCOPE): the DSGW-210 dev channel. Pinned here, never derived from the file.
 DEV_FILE_STEM = "dev"
 DEV_CORE_IMAGE = "ghcr.io/greenautarky/home-assistant-aarch64"
-DEV_CORE_RE = re.compile(r"^[0-9]{4}\.[0-9]{1,2}\.[0-9]+(\.[0-9]+)?-dev$")
+# A plain CalVer tag, NOT a `-dev` one: the Supervisor parses Core tags with AwesomeVersion, which
+# rates "2026.10.4.3-dev" UNKNOWN. get_latest_version() then skips the baked image (-> landing
+# page + runtime pull) and `ha core start` raises AwesomeVersionCompareException (DUT2,
+# BOSv1.6.0-dev9, 2026-11-12, Odoo #1985).
+DEV_CORE_RE = re.compile(r"^[0-9]{4}\.[0-9]{1,2}\.[0-9]+(\.[0-9]+)?$")
 DEV_REL_RE = re.compile(r"^BOSv1\.6\.[0-9]+-dev[0-9]+$")
 UPSTREAM_CORE_RE = re.compile(r"^[0-9]{4}\.[0-9]{1,2}\.[0-9]+$")  # upstream calver, no GA .N suffix
 
@@ -76,9 +80,7 @@ def component_digest(d):
     return hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
 
 
-def ver(v, allow_dev_suffix=False):
-    if allow_dev_suffix and isinstance(v, str) and v.endswith("-dev"):
-        v = v[: -len("-dev")]
+def ver(v):
     if not isinstance(v, str) or not v or not all(p.isdigit() for p in v.split(".")):
         raise ValueError(f"not a dotted-integer version: {v!r}")
     return tuple(int(p) for p in v.split("."))
@@ -131,7 +133,7 @@ def check_file(path, name):
                 e(f"homeassistant.{m} missing (iHost=tinker, DSGW-210=qemuarm-64)")
         for m, v in ha.items():
             try:
-                cores.append((m, ver(v, allow_dev_suffix=dev_scope)))
+                cores.append((m, ver(v)))
             except ValueError as ex:
                 e(f"homeassistant.{m}: {ex}")
     if sup is not None:
@@ -173,7 +175,7 @@ def check_file(path, name):
             if "tinker" in ha:
                 f("homeassistant lists tinker (iHost Core) in the DSGW-only dev.json")
             if "qemuarm-64" in ha and not DEV_CORE_RE.match(str(ha["qemuarm-64"])):
-                f(f"homeassistant.qemuarm-64 is {ha['qemuarm-64']!r}, want YYYY.M.P[.N]-dev (the GA aarch64 dev Core)")
+                f(f"homeassistant.qemuarm-64 is {ha['qemuarm-64']!r}, want a plain CalVer YYYY.M.P[.N] (the GA aarch64 Core); a -dev tag is UNKNOWN to the Supervisor's AwesomeVersion (Odoo #1985)")
             if ha.get("default") != ha.get("qemuarm-64"):
                 f(f"homeassistant.default {ha.get('default')!r} differs from qemuarm-64 {ha.get('qemuarm-64')!r}")
         if not (isinstance(d.get("ga_release"), str) and DEV_REL_RE.match(d["ga_release"])):
