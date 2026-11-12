@@ -76,19 +76,20 @@ DEV_MUST_FLAG = {
     "dev-lists-ihost": dmut(lambda d: d["hassos"].update(ihost="18.3.1.6")),
     "dev-lists-tinker-core": dmut(lambda d: d["homeassistant"].update(tinker="2026.10.4.3-dev")),
     "dev-no-dsgw-board": dmut(lambda d: d["hassos"].pop("dsgw210")),
-    "dev-core-without-dev-suffix": dmut(lambda d: (d["homeassistant"].update({"qemuarm-64": "2026.10.4.3", "default": "2026.10.4.3"}), d.update(core="2026.10.4.3"))),
+    # Odoo #1985: a -dev tag is not CalVer for the Supervisor (AwesomeVersion UNKNOWN) -> the baked Core is never started
+    "dev-core-dev-suffix": dmut(lambda d: (d["homeassistant"].update({"qemuarm-64": "2026.10.4.3-dev", "default": "2026.10.4.3-dev"}), d.update(core="2026.10.4.3-dev"))),
     "dev-core-armv7-image": dmut(lambda d: (d["images"].update(core="ghcr.io/greenautarky/home-assistant-armv7"), d["image"].update(core="ghcr.io/greenautarky/home-assistant-armv7"))),
     "dev-image-images-differ": dmut(lambda d: d["image"].update(dns="homeassistant/{arch}-hassio-dns")),
     "dev-rc-label": dmut(lambda d: d.update(ga_release="BOSv1.6.0-rc1")),
     "dev-core-2026.10-old-supervisor": dmut(lambda d: d.update(supervisor="2025.11.5.10")),
     "dev-default-differs": dmut(lambda d: d["homeassistant"].update(default="2026.8.2.2")),
-    "dev-core-key-differs": dmut(lambda d: d.update(core="2026.10.4.2-dev")),
+    "dev-core-key-differs": dmut(lambda d: d.update(core="2026.10.4.2")),
 }
 DEV_MUST_PASS = {
     "real-dev-file": real_dev,
-    "dev-core-3-part-version": dmut(lambda d: (d["homeassistant"].update({"qemuarm-64": "2026.10.5-dev", "default": "2026.10.5-dev"}), d.update(core="2026.10.5-dev"))),
+    "dev-core-3-part-version": dmut(lambda d: (d["homeassistant"].update({"qemuarm-64": "2026.10.5", "default": "2026.10.5"}), d.update(core="2026.10.5"))),
 }
-# the -dev Core suffix is a dev.json-only exception: everywhere else it stays refused
+# a -dev Core suffix is refused everywhere (dev.json included, see dev-core-dev-suffix)
 SUFFIX_ELSEWHERE_MUST_FLAG = {
     "dev-suffix-core-in-stable": mut(lambda d: (d.update(supervisor="2026.10.5.1"), d["homeassistant"].update(tinker="2026.10.4.3-dev"))),
     "dev-suffix-core-in-beta": ("beta.json", mut(lambda d: (d.update(channel="beta", supervisor="2026.10.5.1"), d["homeassistant"].update(tinker="2026.10.4.3-dev")))),
@@ -102,13 +103,13 @@ WANT = {  # the specific rule that must fire (not merely "something failed")
     "dev-lists-ihost": "DEV-SCOPE hassos lists ihost",
     "dev-lists-tinker-core": "DEV-SCOPE homeassistant lists tinker",
     "dev-no-dsgw-board": "hassos.dsgw210 is None",
-    "dev-core-without-dev-suffix": "want YYYY.M.P[.N]-dev",
+    "dev-core-dev-suffix": "not a dotted-integer version",
     "dev-core-armv7-image": "images.core is 'ghcr.io/greenautarky/home-assistant-armv7'",
     "dev-image-images-differ": "image and images differ",
     "dev-rc-label": "is not a BOSv1.6.N-devN label",
     "dev-core-2026.10-old-supervisor": "supervisor is 2025.11.5.10",
     "dev-default-differs": "homeassistant.default",
-    "dev-core-key-differs": "core '2026.10.4.2-dev' differs",
+    "dev-core-key-differs": "core '2026.10.4.2' differs",
     "dev-suffix-core-in-stable": "homeassistant.tinker: not a dotted-integer version",
     "dev-suffix-core-in-beta": "homeassistant.tinker: not a dotted-integer version",
 }
