@@ -8,7 +8,7 @@ Cases are derived from the REAL line/1.6/stable.json by a single-field mutation
 hand-written fixtures under tests/fixtures/line-channel cover the rest.
 Zero cases is a failure.
 """
-import copy, json, pathlib, subprocess, sys, tempfile
+import copy, json, pathlib, re, subprocess, sys, tempfile
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
 CHECK = REPO / "scripts" / "check_line_channel.py"
@@ -41,7 +41,8 @@ MUST_FLAG = {
     "no-ihost-board": mut(lambda d: d["hassos"].pop("ihost")),
     "dsgw-listed-on-16": mut(lambda d: (d.update(ga_release="BOSv1.6.0-dev2"), d["hassos"].update(dsgw210="16.3.1.10"))),
     "hassos-16": mut(lambda d: d["hassos"].update(ihost="16.3.1.10")),
-    "core-2026.9-old-supervisor": mut(lambda d: d["homeassistant"].update(tinker="2026.9.1")),
+    # state-independent: sets EVERY field the rule reads (old Supervisor + Core >= 2026.9), not the live file's
+    "core-2026.9-old-supervisor": mut(lambda d: (d.update(supervisor="2025.11.5.10"), d["homeassistant"].update(default="2026.9.1", tinker="2026.9.1"))),
     "no-arch-template": mut(lambda d: d["images"].update(dns="ghcr.io/x/dns")),
     "ota-no-board": mut(lambda d: d.update(ota="https://x/{version}.raucb")),
     "supervisor-unparseable": mut(lambda d: d.update(supervisor="latest")),
@@ -57,7 +58,8 @@ MUST_PASS = {
     "dev-label-dsgw-listed": mut(lambda d: (d.update(ga_release="BOSv1.6.0-dev2"), d["hassos"].update(dsgw210="18.3.1.6"))),
     "core-2026.9-with-supervisor-2026.10": mut(lambda d: (d.update(supervisor="2026.10.1.2"),
                                                        d["homeassistant"].update(tinker="2026.9.1"))),
-    "rc-label-with-machine-template-core": mut(lambda d: (d.update(ga_release="BOSv1.6.0-rc1"),
+    "rc-label-with-machine-template-core": mut(lambda d: (d.update(ga_release="BOSv1.6.0-rc1", supervisor="2026.10.1.2"),
+                                                      d["homeassistant"].update(default="2026.10.4.4", tinker="2026.10.4.4"),
                                                       d["image"].update(core="ghcr.io/home-assistant/{machine}-homeassistant"),
                                                       d["images"].update(core="ghcr.io/home-assistant/{machine}-homeassistant"))),
 }
@@ -130,7 +132,10 @@ def case(kind, name, files):
             # with the LIVE digest function, so only the rule under test can flag it
             try:
                 st = json.loads((d / "stable.json").read_text())
-                (d / "promoted.json").write_text(json.dumps({"ga_release": real_promoted["ga_release"], "component_digest": digest(d / "stable.json"), "gate": real_promoted["gate"]}))
+                # release label follows the stable.json under test (when it is an rc label) and the gate is a fixed
+                # constant, so a fixture never depends on which rc the live record currently names
+                rl = st.get("ga_release") if isinstance(st, dict) and re.match(r"^BOSv1\.6\.[0-9]+-rc[0-9]+$", str(st.get("ga_release"))) else real_promoted["ga_release"]
+                (d / "promoted.json").write_text(json.dumps({"ga_release": rl, "component_digest": digest(d / "stable.json"), "gate": {"name": "k31-fresh-flash", "result": "pass", "bundle_sha256": "a" * 64, "record": "ga-ops:gates/line-1.6/fixture.json"}}))
             except (json.JSONDecodeError, SystemExit):
                 pass
         r = run(t); out = r.stdout + r.stderr; n[kind] += 1
@@ -178,7 +183,8 @@ def rec(**kw):
 PROMO_MUST_FLAG = {
     "promo-record-missing": ({"stable.json": real, "promoted.json": None}, "promoted.json missing"),
     "promo-stable-edited-without-record": ({"stable.json": mut(lambda d: d.update(supervisor="2026.10.5.1", homeassistant=dict(d["homeassistant"], tinker="2026.10.4.4", default="2026.10.4.4"))), "promoted.json": rec()}, "differs from the promoted"),
-    "promo-stable-is-unproven-rc-set": ({"stable.json": dict(real_rc, channel="stable"), "promoted.json": rec()}, "differs from the promoted"),
+    # an rc set that differs from the promoted one (explicitly: a Supervisor no record names), independent of whether live rc == stable
+    "promo-stable-is-unproven-rc-set": ({"stable.json": dict(real_rc, channel="stable", supervisor="2026.10.99.99"), "promoted.json": rec()}, "differs from the promoted"),
     "promo-release-mismatch": ({"stable.json": real, "promoted.json": rec(ga_release="BOSv1.6.0-rc2")}, "is not the promoted rc"),
     "promo-digest-not-a-sha256": ({"stable.json": real, "promoted.json": rec(component_digest="xyz")}, "component_digest is not a sha256"),
     "promo-gate-failed": ({"stable.json": real, "promoted.json": rec(gate=dict(GATE, result="fail"))}, "want 'pass'"),
