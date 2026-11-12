@@ -1,8 +1,13 @@
 {
-  "ga_release": "BOSv1.6.0-rc1",
-  "component_digest": "9f9801d839f1fb7042d601d96b85bff49bb1bd3a25635d48c0cfd15f13500a0f",
+  "ga_release": "BOSv1.6.0-rc14",
+  "component_digest": "ecaf1f8a9b4a367dab59ccf85a33ffe0662f22ebc681b61cd5207f4ef4961129",
   "gate": {
-    "name": "baseline",
-    "note": "Set shipped to devices by BOSv1.6.0-rc1/rc2 before the promotion gate existed (Odoo #1610). Only BOSv1.6.0-rc1 may use the baseline gate."
+    "name": "k31-fresh-flash",
+    "result": "pass",
+    "bundle_sha256": "6b59d16264b0d6819c088e7c990a4ace84469357bea07067c534c50c1e56c12d",
+    "record": "ga-ops:gates/line-1.6/BOSv1.6.0-rc14.json",
+    "run_url": "https://github.com/greenautarky/ga-ops/actions/runs/43242123372",
+    "device": "K31",
+    "observed": "2026-11-12"
   }
 }

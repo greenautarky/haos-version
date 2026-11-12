@@ -1,11 +1,11 @@
 {
   "channel": "stable",
-  "ga_release": "BOSv1.6.0-rc1",
-  "supervisor": "2025.11.5.10",
+  "ga_release": "BOSv1.6.0-rc14",
+  "supervisor": "2026.10.5.3",
   "homeassistant": {
-    "default": "2026.8.2.2",
-    "tinker": "2026.8.2.2",
-    "qemuarm-64": "2026.8.2"
+    "default": "2026.10.4.4",
+    "tinker": "2026.10.4.4",
+    "qemuarm-64": "2026.10.4"
   },
   "hassos": {
     "ihost": "18.3.1.6"
@@ -35,5 +35,5 @@
     "observer": "ghcr.io/greenautarky/{arch}-hassio-observer",
     "multicast": "ghcr.io/greenautarky/{arch}-hassio-multicast"
   },
-  "core": "2026.8.2.2"
+  "core": "2026.10.4.4"
 }
