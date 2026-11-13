@@ -3,7 +3,7 @@
   "ga_release": "BOSv1.5.3",
   "supervisor": "2025.11.5.9",
   "homeassistant": {
-    "default": "2026.8.2.2",
+    "default": "2026.8.2.1",
     "qemux86": "2025.11.3",
     "qemux86-64": "2025.11.3",
     "qemuarm": "2025.11.3",
@@ -20,7 +20,7 @@
     "raspberrypi5-64": "2025.11.3",
     "yellow": "2025.11.3",
     "green": "2025.11.3",
-    "tinker": "2026.8.2.2",
+    "tinker": "2026.8.2.1",
     "odroid-c2": "2025.11.3",
     "odroid-c4": "2025.11.3",
     "odroid-m1": "2025.11.3",
@@ -84,5 +84,5 @@
     "observer": "ghcr.io/greenautarky/{arch}-hassio-observer",
     "multicast": "ghcr.io/greenautarky/{arch}-hassio-multicast"
   },
-  "core": "2026.8.2.2"
+  "core": "2026.8.2.1"
 }
