@@ -3,8 +3,8 @@
   "ga_release": "BOSv1.6.0-dev15",
   "supervisor": "2026.10.5.4",
   "homeassistant": {
-    "default": "2026.10.4.4",
-    "qemuarm-64": "2026.10.4.4"
+    "default": "2026.10.4.5",
+    "qemuarm-64": "2026.10.4.5"
   },
   "hassos": {
     "dsgw210": "18.4.1.6"
@@ -34,5 +34,5 @@
     "observer": "ghcr.io/greenautarky/{arch}-hassio-observer",
     "multicast": "ghcr.io/greenautarky/{arch}-hassio-multicast"
   },
-  "core": "2026.10.4.4"
+  "core": "2026.10.4.5"
 }
