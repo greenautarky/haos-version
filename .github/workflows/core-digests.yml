@@ -1,0 +1,28 @@
+name: Core digests
+
+# line/1.6/*.json pin the Core image by manifest digest (digests.core.<arch>) next to the
+# Core version: the device-side prefetch (ga_manager image-prefetch, ga-ihost-docs #336)
+# verifies every layer against it. See scripts/check_core_digests.py.
+# Self-test first (live script vs must-flag/must-pass cases and a local fake registry),
+# then the real files offline, then the real files against ghcr.io. The online step is
+# fail-closed: an unreachable registry is red, not a skip. A daily run catches a tag that
+# moved or a manifest that disappeared after the pin.
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 5 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  core-digests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 scripts/test_check_core_digests.py
+      - run: python3 scripts/check_core_digests.py
+      - run: python3 scripts/check_core_digests.py --registry
