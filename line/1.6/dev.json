@@ -34,5 +34,10 @@
     "observer": "ghcr.io/greenautarky/{arch}-hassio-observer",
     "multicast": "ghcr.io/greenautarky/{arch}-hassio-multicast"
   },
+  "digests": {
+    "core": {
+      "aarch64": "sha256:8b2bb4d2128c10d5b86e93072f10098efbc975d01c3602773c182d01d5714b60"
+    }
+  },
   "core": "2026.10.4.6"
 }

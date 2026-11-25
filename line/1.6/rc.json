@@ -35,5 +35,10 @@
     "observer": "ghcr.io/greenautarky/{arch}-hassio-observer",
     "multicast": "ghcr.io/greenautarky/{arch}-hassio-multicast"
   },
+  "digests": {
+    "core": {
+      "armv7": "sha256:a10855a1d3d50c36746aa9dcb1fe5b5435f528a3b1c6a869acd6b5a57eee43be"
+    }
+  },
   "core": "2026.10.4.6"
 }
