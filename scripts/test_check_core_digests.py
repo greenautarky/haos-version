@@ -140,7 +140,11 @@ def fake(rc_body, dev_body, tag_rc=None, tag_dev=None, header_rc=True, by_digest
 
 def online_files(rc_body, dev_body):
     """Real files, with the declared digests set to the hashes of the bodies the fake serves."""
-    return {"stable": real["stable"],
+    # stable.json gets the rc's digest by promotion: when it carries one, it is pointed at the same
+    # served bytes as rc.json, so the case does not depend on whether stable was promoted yet.
+    stable = mut("stable", lambda d: d["digests"]["core"].update(armv7=sha(rc_body))) \
+        if real["stable"].get("digests") else real["stable"]
+    return {"stable": stable,
             "rc": mut("rc", lambda d: d["digests"]["core"].update(armv7=sha(rc_body))),
             "dev": mut("dev", lambda d: d["digests"]["core"].update(aarch64=sha(dev_body)))}
 
@@ -187,7 +191,7 @@ r.close()
 case("must-flag", "online-unreachable-fails-closed", online_files(GOOD_RC, GOOD_DEV), "cannot reach the registry", ("--registry", "--registry-url", "http://127.0.0.1:9"), rc_expect=2)
 # --registry with nothing to compare must not pass (no digest anywhere -> exit 2, not a green zero)
 case("must-flag", "online-zero-compared-fails-closed",
-     {"stable": real["stable"], "rc": mut("rc", lambda d: d.pop("digests")), "dev": mut("dev", lambda d: d.pop("digests"))},
+     {"stable": mut("stable", lambda d: d.pop("digests", None)), "rc": mut("rc", lambda d: d.pop("digests")), "dev": mut("dev", lambda d: d.pop("digests"))},
      "no digest was compared", ("--registry", "--registry-url", "http://127.0.0.1:9"), rc_expect=2)
 
 for f in fails: print("FAIL", f)
