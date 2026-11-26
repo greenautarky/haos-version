@@ -1,10 +1,10 @@
 {
   "channel": "stable",
-  "ga_release": "BOSv1.6.0-rc14",
-  "supervisor": "2026.10.5.3",
+  "ga_release": "BOSv1.6.1-rc5",
+  "supervisor": "2026.10.5.4",
   "homeassistant": {
-    "default": "2026.10.4.4",
-    "tinker": "2026.10.4.4",
+    "default": "2026.10.4.6",
+    "tinker": "2026.10.4.6",
     "qemuarm-64": "2026.10.4"
   },
   "hassos": {
@@ -35,5 +35,10 @@
     "observer": "ghcr.io/greenautarky/{arch}-hassio-observer",
     "multicast": "ghcr.io/greenautarky/{arch}-hassio-multicast"
   },
-  "core": "2026.10.4.4"
+  "digests": {
+    "core": {
+      "armv7": "sha256:a10855a1d3d50c36746aa9dcb1fe5b5435f528a3b1c6a869acd6b5a57eee43be"
+    }
+  },
+  "core": "2026.10.4.6"
 }

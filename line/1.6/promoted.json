@@ -1,13 +1,13 @@
 {
-  "ga_release": "BOSv1.6.0-rc14",
-  "component_digest": "ecaf1f8a9b4a367dab59ccf85a33ffe0662f22ebc681b61cd5207f4ef4961129",
+  "ga_release": "BOSv1.6.1-rc5",
+  "component_digest": "73e585c63a41147cc5b0cc2665fccdda04d6029b5d707a516a3ddcd93ac301f3",
   "gate": {
     "name": "k31-fresh-flash",
     "result": "pass",
-    "bundle_sha256": "6b59d16264b0d6819c088e7c990a4ace84469357bea07067c534c50c1e56c12d",
-    "record": "ga-ops:gates/line-1.6/BOSv1.6.0-rc14.json",
-    "run_url": "https://github.com/greenautarky/ga-ops/actions/runs/43242123372",
+    "bundle_sha256": "48e59b34d39f30f0850c04bcf47caac5a462f95430417213bac3960aba876f2a",
+    "record": "ga-ops:gates/line-1.6/BOSv1.6.1-rc5.json",
+    "run_url": "k31-reflash run3 (reflash3b 20261126-002959) + devtests run1, gate record BOSv1.6.1-rc5.gate.txt",
     "device": "K31",
-    "observed": "2026-11-12"
+    "observed": "2026-11-26"
   }
 }
